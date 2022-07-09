@@ -1,8 +1,5 @@
 import nextcord
 from nextcord.ext import commands
-from nextcord.utils import get
-import sqlite3
-import random
 import asyncio
 from config import settings
 
@@ -372,9 +369,6 @@ class AdministrationCommands(commands.Cog):
             except asyncio.TimeoutError:
                 await ctx.send("Timed out")
                 return
-
-
-
 
 
 def setup(client):
