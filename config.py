@@ -8,5 +8,6 @@ settings = {
                 "/ᐠ｡ꞈ｡ᐟ\ ", "(｀･ω･)ﾉ☆･ﾟ::ﾟ", "|ω･`)",  "♪♪♪♪♪♪♪♪♪♪♪♪♪"],
     'guild_id': 924537075951366154,
     'announce_channel': 995216968934236281,
-    'active_voice_member_count_channel': 994238225050783774
+    'active_voice_member_count_channel': 994238225050783774,
+    'emoji_id': 995191349835989052
 }

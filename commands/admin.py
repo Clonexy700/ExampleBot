@@ -1,3 +1,4 @@
+import aiohttp
 import nextcord
 from nextcord.ext import commands
 import asyncio
@@ -280,45 +281,51 @@ class AdministrationCommands(commands.Cog):
                 value_3 = reply.content
                 embed_to_announce.add_field(name=f'{name_3}', value=f'{value_3}', inline=False)
             if str(reaction) == '🌆':
-                help_embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
-                help_embed.add_field(name='Установка миниатюры',
-                                     value=f'ОТПРАВЬТЕ ССЫЛКУ (URL) НА МИНИАТЮРУ',
-                                     inline=False)
-                await ctx.send(embed=help_embed)
-
-                def check(author):
-                    def inner_check(message):
-                        return message.author == author
-
-                    return inner_check
-
                 try:
-                    reply = await self.client.wait_for('message', check=check(ctx.author), timeout=360)
-                except asyncio.TimeoutError:
-                    await ctx.send("Timed out")
-                    return
-                thumbnail_url = reply.content
-                embed_to_announce.set_thumbnail(url=thumbnail_url)
+                    help_embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+                    help_embed.add_field(name='Установка миниатюры',
+                                         value=f'ОТПРАВЬТЕ ССЫЛКУ (URL) НА МИНИАТЮРУ',
+                                         inline=False)
+                    await ctx.send(embed=help_embed)
+
+                    def check(author):
+                        def inner_check(message):
+                            return message.author == author
+
+                        return inner_check
+
+                    try:
+                        reply = await self.client.wait_for('message', check=check(ctx.author), timeout=360)
+                    except asyncio.TimeoutError:
+                        await ctx.send("Timed out")
+                        return
+                    thumbnail_url = reply.content
+                    embed_to_announce.set_thumbnail(url=thumbnail_url)
+                except commands.CommandInvokeError(err):
+                    await ctx.send(err)
             if str(reaction) == '🖼️':
-                help_embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
-                help_embed.add_field(name='Установка миниатюры',
-                                     value=f'ОТПРАВЬТЕ ССЫЛКУ (URL) НА ИЗОБРАЖЕНИЕ',
-                                     inline=False)
-                await ctx.send(embed=help_embed)
-
-                def check(author):
-                    def inner_check(message):
-                        return message.author == author
-
-                    return inner_check
-
                 try:
-                    reply = await self.client.wait_for('message', check=check(ctx.author), timeout=360)
-                except asyncio.TimeoutError:
-                    await ctx.send("Timed out")
-                    return
-                image_url = reply.content
-                embed_to_announce.set_image(url=image_url)
+                    help_embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+                    help_embed.add_field(name='Установка миниатюры',
+                                         value=f'ОТПРАВЬТЕ ССЫЛКУ (URL) НА ИЗОБРАЖЕНИЕ',
+                                         inline=False)
+                    await ctx.send(embed=help_embed)
+
+                    def check(author):
+                        def inner_check(message):
+                            return message.author == author
+
+                        return inner_check
+
+                    try:
+                        reply = await self.client.wait_for('message', check=check(ctx.author), timeout=360)
+                    except asyncio.TimeoutError:
+                        await ctx.send("Timed out")
+                        return
+                    image_url = reply.content
+                    embed_to_announce.set_image(url=image_url)
+                except commands.CommandInvokeError(err):
+                    await ctx.send(err)
             if str(reaction) == '🏰':
                 help_embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
                 help_embed.add_field(name='Установка подвала',
@@ -369,6 +376,16 @@ class AdministrationCommands(commands.Cog):
             except asyncio.TimeoutError:
                 await ctx.send("Timed out")
                 return
+
+    @__announce.error
+    async def __announce_error_handler(self, ctx, error):
+        embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+        if isinstance(error, commands.CommandInvokeError):
+            embed.add_field(name='Ошибка', value=f'Команда была прервана ошибкой класса InvokeError. '
+                                                 f'Возникла неразрешимая ошибка:\n{error}')
+            await ctx.send(embed=embed)
+
+
 
 
 def setup(client):

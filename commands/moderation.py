@@ -72,31 +72,37 @@ class Moderation(commands.Cog):
     @commands.command(aliases=['mute', 'timeout', 'm', 'мут'])
     @commands.has_permissions(manage_messages=True)
     async def __mute(self, ctx, user: nextcord.Member = None, time: str = None, *, reason: str = 'не указана'):
-        if user is None:
+        try:
+            if user is None:
+                embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+                embed.add_field(name='Ошибка', value=f'Правильное написание команды: \n'
+                                                     f'{settings["PREFIX"]}mute <пользователь> <время в формате: 1d/1h/1m/1s> <причина>')
+                return await ctx.send(embed=embed)
+            if time is None:
+                embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+                embed.add_field(name='Ошибка', value=f'Правильное написание команды: \n'
+                                                     f'{settings["PREFIX"]}mute <пользователь> <время в формате: 1d 1h 1m 1s> <причина>')
+                return await ctx.send(embed=embed)
+            if user == ctx.author:
+                embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+                embed.add_field(name='Ошибка', value=f'Нельзя замутить самого себя')
+                return await ctx.send(embed=embed)
+            time_in_seconds = humanfriendly.parse_timespan(time)
+            if time_in_seconds > 1296000.0:
+                embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+                embed.add_field(name='Ошибка', value=f'Слишком большое время мута, может забаним его?')
+                return await ctx.send(embed=embed)
+            await user.edit(timeout=nextcord.utils.utcnow() + datetime.timedelta(seconds=time_in_seconds))
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
-            embed.add_field(name='Ошибка', value=f'Правильное написание команды: \n'
-                                                 f'{settings["PREFIX"]}mute <пользователь> <время в формате: 1d/1h/1m/1s> <причина>')
-            return await ctx.send(embed=embed)
-        if time is None:
+            embed.add_field(name='Мут',
+                            value=f'{ctx.author.mention} выдал мут {user.mention}\nПричина мута: `{reason}`\n'
+                                  f'Время мута: {time} ')
+            await ctx.send(embed=embed)
+        except nextcord.Forbidden:
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
-            embed.add_field(name='Ошибка', value=f'Правильное написание команды: \n'
-                                                 f'{settings["PREFIX"]}mute <пользователь> <время в формате: 1d 1h 1m 1s> <причина>')
-            return await ctx.send(embed=embed)
-        if user == ctx.author:
-            embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
-            embed.add_field(name='Ошибка', value=f'Нельзя замутить самого себя')
-            return await ctx.send(embed=embed)
-        time_in_seconds = humanfriendly.parse_timespan(time)
-        print(time_in_seconds)
-        if time_in_seconds > 1296000.0:
-            embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
-            embed.add_field(name='Ошибка', value=f'Слишком большое время мута, может забаним его?')
-            return await ctx.send(embed=embed)
-        await user.edit(timeout=nextcord.utils.utcnow() + datetime.timedelta(seconds=time_in_seconds))
-        embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
-        embed.add_field(name='Мут', value=f'{ctx.author.mention} выдал мут {user.mention}\nПричина мута: `{reason}`\n'
-                                          f'Время мута: {time} ')
-        await ctx.send(embed=embed)
+            embed.add_field(name='Ошибка',
+                            value=f'Этого пользователя нельзя замутить, или у меня недостаточно прав')
+            await ctx.send(embed=embed)
 
     @commands.command(aliases=['unmute', 'um', 'размут'])
     @commands.has_permissions(manage_messages=True)

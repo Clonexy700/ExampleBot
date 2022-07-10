@@ -70,7 +70,7 @@ class InformationSender(commands.Cog):
 
             cur_xp = exp
             cur_lvl = level
-            next_xp = round((5 * (cur_lvl ** 3)) / 3)
+            next_xp = round((30 * (cur_lvl ** 2)))
 
             voice_time = cursor.execute(f"SELECT time FROM voice WHERE user_id = {user.id}").fetchone()[0]
 

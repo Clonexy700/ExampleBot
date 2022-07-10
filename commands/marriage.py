@@ -86,7 +86,17 @@ class MarriageListener(commands.Cog):
             return await ctx.send('что-то с бд!!!')
         if partner != 0:
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
-            embed.add_field(name='Ошибка', value=f'У вас уже есть пара')
+            embed.add_field(name='Ошибка', value=f'Вы уже женаты.')
+            return await ctx.send(embed=embed)
+        cursor.execute(f"SELECT pair_id FROM marriage WHERE user_id = {user.id}")
+        partner = cursor.fetchone()
+        try:
+            partner = partner[0]
+        except:
+            return await ctx.send('что-то с бд!!!')
+        if partner != 0:
+            embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+            embed.add_field(name='Ошибка', value=f'Данный пользователь уже женат.')
             return await ctx.send(embed=embed)
         cursor.execute(f"SELECT user_id FROM marriage WHERE user_id = {ctx.author.id}")
         result = cursor.fetchone()
@@ -131,7 +141,7 @@ class MarriageListener(commands.Cog):
         if reply.content.casefold() == 'да':
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
             embed.add_field(name='Свадьба успешна',
-                            value=f'{ctx.author.mention} и {user.mention} теперь парочка!',
+                            value=f'{ctx.author.mention} и {user.mention} обвенчались.',
                             inline=False)
             await ctx.send(embed=embed)
             sql = "UPDATE marriage SET pair_id = ? WHERE user_id = ?"

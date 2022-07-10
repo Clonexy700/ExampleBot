@@ -2,8 +2,31 @@ import nextcord
 from nextcord.ext import commands
 from nextcord.utils import get
 import random
+import datetime
 import sqlite3
 from config import settings
+
+
+def get_slot_screen():
+    slots = ['grapes', 'gem', 'tangerine', 'apple', 'cherries', 'seven']
+    slot1 = slots[random.randint(0, 5)]
+    slot2 = slots[random.randint(0, 5)]
+    slot3 = slots[random.randint(0, 5)]
+    slot4 = slots[random.randint(0, 5)]
+
+    slotOutput = '|\t:{}:\t|\t:{}:\t|\t:{}:\t|\t:{}:\t|\n'.format(slot1, slot2, slot3, slot4)
+
+    if slot1 == slot2 and slot2 == slot3 and slot3 == slot4 and slot4 != 'seven':
+        return slotOutput + '$$ GREAT $$'
+
+    elif slot1 == 'seven' and slot2 == 'seven' and slot3 == 'seven' and slot4 == 'seven':
+        return slotOutput + '$$ JACKPOT $$'
+
+    elif slot1 == slot2 and slot3 == slot4 or slot1 == slot3 and slot2 == slot4 or slot1 == slot4 and slot2 == slot3:
+        return slotOutput + '$ NICE $'
+
+    else:
+        return slotOutput
 
 
 class Economics(commands.Cog):
@@ -62,10 +85,12 @@ class Economics(commands.Cog):
         cursor.close()
         db.close()
 
-    @commands.cooldown(1, 100, commands.BucketType.user)
+    @commands.cooldown(1, 3600 * 4, commands.BucketType.user)
     @commands.command(aliases=['moneydaily', 'ежедн', 'ежедневное', 'timely', 'еж', 'денежка', 'dailymoney',
                                'daily', 'награда', 'таймли', 'тайм', 'ежед', 'еже'])
     async def __daily(self, ctx):
+
+        emoji = self.client.get_emoji(settings['emoji_id'])
 
         db = sqlite3.connect("./databases/main.sqlite")
         cursor = db.cursor()
@@ -77,7 +102,7 @@ class Economics(commands.Cog):
             return await ctx.send('что-то с бд!!!')
 
         sql = "UPDATE money SET money = ? WHERE user_id = ?"
-        val = (balance + 100, ctx.author.id)
+        val = (balance + 150, ctx.author.id)
         cursor.execute(sql, val)
         db.commit()
         cursor.close()
@@ -85,7 +110,7 @@ class Economics(commands.Cog):
 
         embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
         embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar)
-        embed.add_field(name='Денежное вознаграждение', value=f'Вы получили 100 валюта_нейм')
+        embed.add_field(name='Денежное вознаграждение', value=f'Вы получили 150 {emoji}')
         embed.set_footer(text=random.choice(settings['footers']))
 
         await ctx.send(embed=embed)
@@ -94,13 +119,15 @@ class Economics(commands.Cog):
     async def daily_cooldown_error(self, ctx, error):
         if isinstance(error, commands.CommandOnCooldown):
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
-            embed.add_field(name='Ошибка', value='Команда сейчас недоступна, '
-                                                 'попробуйте позже, через %.2fs секунд' % error.retry_after)
+            remaining_time = str(datetime.timedelta(seconds=int(error.retry_after)))
+            embed.add_field(name='Ошибка', value=f'Команда сейчас недоступна, '
+                                                 f'попробуйте позже, через {remaining_time}')
             await ctx.send(embed=embed)
         raise error
 
     @commands.command(aliases=['bal', 'бал', 'баланс', 'money', 'balance', '$', 'wallet', 'мани', 'b', 'б'])
     async def __balance(self, ctx, user: nextcord.Member = None):
+        emoji = self.client.get_emoji(settings['emoji_id'])
         user = ctx.author if not user else user
 
         if user.bot:
@@ -124,7 +151,7 @@ class Economics(commands.Cog):
 
         embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
         embed.set_author(name=user.name, icon_url=user.avatar.url)
-        embed.add_field(name='Баланс', value=f'У {user.name} на счету `{balance}` валюта_нейм')
+        embed.add_field(name='Баланс', value=f'У {user.name} на счету `{balance}` {emoji}')
         embed.set_footer(text=random.choice(settings['footers']))
 
         await ctx.send(embed=embed)
@@ -134,6 +161,7 @@ class Economics(commands.Cog):
 
     @commands.command(aliases=['give', 'transfer', 'дать', 'на', 'moneysend', 'sendmoney', 'send'])
     async def __transfer(self, ctx, user: nextcord.Member = None, amount: int = 0):
+        emoji = self.client.get_emoji(settings['emoji_id'])
         if user is None:
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
             embed.add_field(name='Ошибка', value=f'Правильное написание команды: '
@@ -165,7 +193,7 @@ class Economics(commands.Cog):
 
         if sender_balance < amount:
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
-            embed.add_field(name='Ошибка', value=f'У вас недостаточно валюта_нейм для отправки')
+            embed.add_field(name='Ошибка', value=f'У вас недостаточно {emoji} для отправки')
             return await ctx.send(embed=embed)
 
         cursor.execute(f"SELECT money FROM money WHERE user_id = {user.id}")
@@ -187,7 +215,7 @@ class Economics(commands.Cog):
 
         embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
         embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar)
-        embed.add_field(name='Передача валюты', value=f'{ctx.author.name} передал {user.name} {amount} валюта_нейм')
+        embed.add_field(name='Передача валюты', value=f'{ctx.author.mention} передал {user.mention} {amount} {emoji}')
         embed.set_footer(text=f'транзакция №{random.randint(1, 1000000000)}', icon_url=user.avatar)
 
         await ctx.send(embed=embed)
@@ -198,6 +226,7 @@ class Economics(commands.Cog):
     @commands.cooldown(1, 6, commands.BucketType.guild)
     @commands.command(aliases=['mleaderboard', 'mld', 'topmoney', 'mtop', 'topm', 'мтоп'])
     async def __money_leaderboard(self, ctx):
+        emoji = self.client.get_emoji(settings['emoji_id'])
         async with ctx.channel.typing():
             counter = 0
             db = sqlite3.connect("./databases/main.sqlite")
@@ -206,7 +235,7 @@ class Economics(commands.Cog):
             for row in cursor.execute("SELECT user_id, money FROM money ORDER BY money DESC LIMIT 15"):
                 counter += 1
                 user = await self.client.fetch_user(row[0])
-                users.append(f'`#{counter}`. {user.mention}, `Баланс: {row[1]}`\n')
+                users.append(f'`#{counter}`. {user.mention}, `Баланс: {row[1]}` {emoji}\n')
             description = ' '.join([user for user in users])
             embed = nextcord.Embed(title='Топ 15 сервера по валюте', color=settings['defaultBotColor'],
                                    timestamp=ctx.message.created_at, description=description)
@@ -221,6 +250,137 @@ class Economics(commands.Cog):
                                                  'попробуйте позже, через %.2fs секунд' % error.retry_after)
             await ctx.send(embed=embed)
         raise error
+
+    @commands.has_permissions(administrator=True)
+    @commands.command(aliases=['take', 'withdraw', 'забрать'])
+    async def __withdraw(self, ctx, user: nextcord.Member = None, amount: int = None):
+        emoji = self.client.get_emoji(settings['emoji_id'])
+        emoji = self.client.get_emoji(settings['emoji_id'])
+        if user is None:
+            embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+            embed.add_field(name='Ошибка', value=f'Правильное написание команды: '
+                                                 f'{settings["PREFIX"]}give <пользователь> <количество>')
+            return await ctx.send(embed=embed)
+        if user.bot:
+            return await ctx.send('Нельзя указывать бота!!!')
+        if amount <= 0:
+            embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+            embed.add_field(name='Ошибка', value=f'Укажите количество валюты: '
+                                                 f'{settings["PREFIX"]}give <пользователь> <количество>')
+            return await ctx.send(embed=embed)
+        db = sqlite3.connect("./databases/main.sqlite")
+        cursor = db.cursor()
+        if cursor.execute(f"SELECT user_id FROM money WHERE user_id = {user.id}").fetchone() is None:
+            sql = "INSERT INTO money(user_id, money) VALUES (?, ?)"
+            val = (user.id, 100)
+            cursor.execute(sql, val)
+            db.commit()
+
+        cursor.execute(f"SELECT money FROM money WHERE user_id = {user.id}")
+        balance = cursor.fetchone()
+        try:
+            balance = balance[0]
+        except:
+            return await ctx.send('что-то с бд!!!')
+        sql = "UPDATE money SET money = ? WHERE user_id = ?"
+        val = (balance - amount, user.id)
+        cursor.execute(sql, val)
+        db.commit()
+
+        embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+        embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar)
+        embed.add_field(name='Валютные операции',
+                        value=f'{ctx.author.mention} забрал у {user.mention} {amount} {emoji}')
+        embed.set_footer(icon_url=user.avatar)
+
+        await ctx.send(embed=embed)
+        cursor.close()
+        db.close()
+
+    @commands.has_permissions(administrator=True)
+    @commands.command(aliases=['award', 'наградить'])
+    async def __award(self, ctx, user: nextcord.Member = None, amount: int = None):
+        emoji = self.client.get_emoji(settings['emoji_id'])
+
+        if user is None:
+            embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+            embed.add_field(name='Ошибка', value=f'Правильное написание команды: '
+                                                 f'{settings["PREFIX"]}give <пользователь> <количество>')
+            return await ctx.send(embed=embed)
+        if user.bot:
+            return await ctx.send('Нельзя указывать бота!!!')
+        if amount <= 0:
+            embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+            embed.add_field(name='Ошибка', value=f'Укажите количество валюты: '
+                                                 f'{settings["PREFIX"]}give <пользователь> <количество>')
+            return await ctx.send(embed=embed)
+        db = sqlite3.connect("./databases/main.sqlite")
+        cursor = db.cursor()
+        if cursor.execute(f"SELECT user_id FROM money WHERE user_id = {user.id}").fetchone() is None:
+            sql = "INSERT INTO money(user_id, money) VALUES (?, ?)"
+            val = (user.id, 100)
+            cursor.execute(sql, val)
+            db.commit()
+
+        cursor.execute(f"SELECT money FROM money WHERE user_id = {user.id}")
+        balance = cursor.fetchone()
+        try:
+            balance = balance[0]
+        except:
+            return await ctx.send('что-то с бд!!!')
+        sql = "UPDATE money SET money = ? WHERE user_id = ?"
+        val = (balance + amount, user.id)
+        cursor.execute(sql, val)
+        db.commit()
+
+        embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+        embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar)
+        embed.add_field(name='Валютные операции',
+                        value=f'{ctx.author.mention} наградил пользователя {user.mention} {amount} {emoji}')
+        embed.set_footer(icon_url=user.avatar)
+
+        await ctx.send(embed=embed)
+        cursor.close()
+        db.close()
+
+    @commands.command(aliases=['slots', 'slot', 'casino', 'слоты'])
+    async def __slots(self, ctx):
+        first_row = []
+        your_row = []
+        third_row = []
+        emoji_list = ["🍇", "👑", "🍉", "💎", "🍒"]
+        for i in range(3):
+            emoji = random.choice(emoji_list)
+            first_row.append(emoji)
+            emoji = random.choice(emoji_list)
+            your_row.append(emoji)
+            emoji = random.choice(emoji_list)
+            third_row.append(emoji)
+        stater = 'Ничего не выиграно'
+        if your_row[0] == your_row[1] and your_row[1] == your_row[2] and your_row[2] == your_row[0] and your_row[0] == '👑':
+            stater = '$$$$$ Джекпот $$$$$'
+            embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+            embed.add_field(name='Слоты', value=f'⠀`{first_row}`\n>|`{your_row}`|\n⠀`{third_row}`\n{stater}')
+            return await ctx.send(embed=embed)
+        elif your_row[0] == your_row[1] and your_row[1] == your_row[2] and your_row[2] == your_row[0] and your_row[0] == '💎':
+            stater = '$$$ 3 алмаза $$$'
+            embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+            embed.add_field(name='Слоты', value=f'⠀`{first_row}`\n>|`{your_row}`|\n⠀`{third_row}`\n{stater}')
+            return await ctx.send(embed=embed)
+        elif your_row[0] == your_row[1] and your_row[1] == your_row[2] and your_row[2] == your_row[0] and your_row[0] != '👑' and your_row[0] != '💎':
+            stater = '$$ 3 фрукта $$'
+            embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+            embed.add_field(name='Слоты', value=f'⠀`{first_row}`\n>|`{your_row}`|\n⠀`{third_row}`\n{stater}')
+            return await ctx.send(embed=embed)
+        elif your_row[0] == your_row[1] or your_row[0] == your_row[2] or \
+                your_row[2] == your_row[0] or your_row[1] == your_row[2]:
+            stater = '$ два любых $'
+            embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+            embed.add_field(name='Слоты', value=f'⠀`{first_row}`\n>|`{your_row}`|\n⠀`{third_row}`\n{stater}')
+            return await ctx.send(embed=embed)
+        embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+        embed.add_field(name='Слоты', value=f'⠀`{first_row}`\n>|`{your_row}`|\n⠀`{third_row}`\n{stater}')
+        return await ctx.send(embed=embed)
 
 
 def setup(client):

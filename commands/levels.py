@@ -1,3 +1,5 @@
+import asyncio
+
 import nextcord
 from nextcord.ext import commands
 from nextcord.utils import get
@@ -22,7 +24,7 @@ class LevelingSystem(commands.Cog):
         except:
             return print('что-то с бд!!!')
 
-        if current_exp >= round((5 * (current_lvl ** 3)) / 3):
+        if current_exp >= round((30 * (current_lvl ** 2))):
 
             sql = "UPDATE levels SET lvl = ? WHERE user_id = ?"
             val = (current_lvl + 1, author_id)
@@ -77,6 +79,7 @@ class LevelingSystem(commands.Cog):
             db.commit()
 
         if len(message.content) > 3:
+            await asyncio.sleep(1)
             db = sqlite3.connect("./databases/main.sqlite")
             cursor = db.cursor()
             cursor.execute(f"SELECT exp FROM levels WHERE user_id = {message.author.id}")
@@ -86,7 +89,7 @@ class LevelingSystem(commands.Cog):
             except:
                 return await print('что-то с бд!!!')
             sql = "UPDATE levels SET exp = ? WHERE user_id = ?"
-            val = (current_exp + random.randint(1, 3), author_id)
+            val = (current_exp + random.randint(0, 2), author_id)
             cursor.execute(sql, val)
             db.commit()
 
@@ -145,7 +148,7 @@ class LevelingSystem(commands.Cog):
 
         embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
         embed.set_author(name=user.name, icon_url=user.avatar.url)
-        embed.add_field(name='Уровень', value=f'Ваш уровень: `{level}`\n Опыт: `{exp}/{round(5 * (level ** 3) / 3)}`')
+        embed.add_field(name='Уровень', value=f'Ваш уровень: `{level}`\n Опыт: `{exp}/{round((30 * (level ** 2)))}`')
         embed.set_footer(text=random.choice(settings['footers']))
 
         await ctx.send(embed=embed)
@@ -166,7 +169,7 @@ class LevelingSystem(commands.Cog):
                 counter += 1
                 user = await self.client.fetch_user(row[0])
                 users.append(f'`#{counter}`. {user.mention}, `Уровень: {row[1]}, '
-                             f'опыт: {row[2]}/{round(5 * (row[1] ** 3) / 3)}`\n')
+                             f'опыт: {row[2]}/{round((30 * (row[1] ** 2)))}`\n')
             description = ' '.join([user for user in users])
             embed = nextcord.Embed(title='Топ 15 сервера по уровням', color=settings['defaultBotColor'],
                                    timestamp=ctx.message.created_at, description=description)
