@@ -1,8 +1,9 @@
 import nextcord
 from nextcord.ext import commands
-from nextcord.utils import get
 import sqlite3
 import locale
+import asyncio
+from nextcord.utils import get
 from datetime import datetime
 from config import settings
 
@@ -64,15 +65,15 @@ class MarriageListener(commands.Cog):
         db.close()
 
     @commands.command(aliases=['marry', 'свадьба'])
-    async def __marry(self, ctx, user: nextcord.Member = None):
-        if user is None:
+    async def __marry(self, ctx, member: nextcord.Member = None):
+        if member is None:
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
             embed.add_field(name='Ошибка', value=f'Правильное написание команды: '
                                                  f'{settings["PREFIX"]}marry <пользователь>')
             return await ctx.send(embed=embed)
-        if user.bot:
+        if member.bot:
             return await ctx.send('Нельзя указывать бота!!!')
-        if user == ctx.author:
+        if member == ctx.author:
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
             embed.add_field(name='Ошибка', value=f'Нельзя устроить свадьбу с самим собой')
             return await ctx.send(embed=embed)
@@ -88,7 +89,7 @@ class MarriageListener(commands.Cog):
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
             embed.add_field(name='Ошибка', value=f'Вы уже женаты.')
             return await ctx.send(embed=embed)
-        cursor.execute(f"SELECT pair_id FROM marriage WHERE user_id = {user.id}")
+        cursor.execute(f"SELECT pair_id FROM marriage WHERE user_id = {member.id}")
         partner = cursor.fetchone()
         try:
             partner = partner[0]
@@ -105,50 +106,58 @@ class MarriageListener(commands.Cog):
             val = (ctx.author.id, 0, '0')
             cursor.execute(sql, val)
             db.commit()
-        cursor.execute(f"SELECT user_id FROM marriage WHERE user_id = {user.id}")
+        cursor.execute(f"SELECT user_id FROM marriage WHERE user_id = {member.id}")
         result = cursor.fetchone()
         if result is None:
             sql = "INSERT INTO marriage(user_id, pair_id, date) VALUES (?, ?, ?)"
             val = (user.id, 0, '0')
             cursor.execute(sql, val)
             db.commit()
-
+        emoji_marry = self.client.get_emoji(995605076108382288)
         embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
-        embed.add_field(name='Свадьба',
-                             value=f'{ctx.author.mention} предлагает вам свою руку и сердце! {user.mention}',
-                             inline=False)
+        embed.add_field(name=f'{emoji_marry} Свадьба',
+                        value=f'{ctx.author.mention} предлагает вам свою руку и сердце! {member.mention}',
+                        inline=False)
         embed.add_field(name='Каков будет ваш ответ?',
-                             value='Вы можете ответить с помощью **да** или **нет**, у вас есть целая минута, '
-                                   'чтобы принять '
-                                   'решение!',
-                             inline=False)
-        await ctx.send(embed=embed)
+                        value='Вы можете ответить с помощью **да** или **нет**, у вас есть целая минута, '
+                              'чтобы принять '
+                              'решение!',
+                        inline=False)
+        emoji_no = get(self.client.emojis, name='emoji_no')
+        emoji_yes = get(self.client.emojis, name='emoji_yes')
+        msg = await ctx.send(embed=embed)
 
-        def check(user):
-            def inner_check(message):
-                return message.author == user and \
-                       (message.content.casefold() == "да" or message.content.casefold() == "нет")
+        def check(reaction, user):
+            return (reaction.message.id == msg.id) and (user == member)
+        await msg.add_reaction(emoji_yes)
+        await msg.add_reaction(emoji_no)
+        print(emoji_yes.id)
+        print(emoji_no.id)
 
-            return inner_check
-
-        reply = await self.client.wait_for('message', check=check(user), timeout=30)
-        if reply.content.casefold() == 'нет':
+        try:
+            reaction, user = await self.client.wait_for('reaction_add', check=check, timeout=60)
+        except asyncio.TimeoutError:
+            return
+        print(str(reaction))
+        print(str(emoji_no))
+        print(str(emoji_yes))
+        if str(reaction) == str(emoji_no):
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
             embed.add_field(name='Свадьба неудачна',
                             value=f'Время истекло или пользователь отказался от предложения',
                             inline=False)
             await ctx.send(embed=embed)
-        if reply.content.casefold() == 'да':
+        if str(reaction) == str(emoji_yes):
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
             embed.add_field(name='Свадьба успешна',
-                            value=f'{ctx.author.mention} и {user.mention} обвенчались.',
+                            value=f'{ctx.author.mention} и {member.mention} обвенчались.',
                             inline=False)
             await ctx.send(embed=embed)
             sql = "UPDATE marriage SET pair_id = ? WHERE user_id = ?"
-            val = (user.id, ctx.author.id)
+            val = (member.id, ctx.author.id)
             cursor.execute(sql, val)
             db.commit()
-            locale.setlocale(locale.LC_TIME, "ru_RU")
+            locale.setlocale(locale.LC_TIME, 'en_US.UTF-8')
             date_format = "%a, %d %b %Y %H:%M:%S"
             timestamp = datetime.now()
             date = timestamp.strftime(date_format)
@@ -157,11 +166,11 @@ class MarriageListener(commands.Cog):
             cursor.execute(sql, val)
             db.commit()
             sql = "UPDATE marriage SET pair_id = ? WHERE user_id = ?"
-            val = (ctx.author.id, user.id)
+            val = (ctx.author.id, member.id)
             cursor.execute(sql, val)
             db.commit()
             sql = "UPDATE marriage SET date = ? WHERE user_id = ?"
-            val = (date, user.id)
+            val = (date, member.id)
             cursor.execute(sql, val)
             db.commit()
         cursor.close()
@@ -175,9 +184,11 @@ class MarriageListener(commands.Cog):
                             value=f'Время истекло или пользователь отказался от предложения',
                             inline=False)
             await ctx.send(embed=embed)
+        raise error
 
     @commands.command(aliases=['divorce', 'развод'])
     async def __divorce(self, ctx):
+        emoji_marry = self.client.get_emoji(995605076108382288)
         db = sqlite3.connect("./databases/main.sqlite")
         cursor = db.cursor()
         cursor.execute(f"SELECT pair_id FROM marriage WHERE user_id = {ctx.author.id}")
@@ -208,7 +219,8 @@ class MarriageListener(commands.Cog):
         db.commit()
         embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
         user = await self.client.fetch_user(partner)
-        embed.add_field(name='Развод', value=f'{ctx.author.name} и {user.name} теперь разведены и больше не пара')
+        embed.add_field(name=f'{emoji_marry} Развод',
+                        value=f'{ctx.author.name} и {user.name} теперь разведены и больше не пара')
         await ctx.send(embed=embed)
         cursor.close()
         db.close()
