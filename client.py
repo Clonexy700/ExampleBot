@@ -1,10 +1,12 @@
 import os
 import nextcord
 from nextcord.ext import commands
+from dotenv import load_dotenv
 from config import settings
-from webserver import keep_alive
 
-token = os.environ['token']
+load_dotenv()
+
+token = os.getenv("token")
 
 client = commands.Bot(command_prefix=settings['PREFIX'], case_insensitive=True, intents=nextcord.Intents.all())
 client.remove_command('help')

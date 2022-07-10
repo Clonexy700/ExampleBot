@@ -1,9 +1,7 @@
 import nextcord
 from nextcord.ext import commands
-import os
 import sqlite3
 import locale
-import numpy as np
 from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 from config import settings
@@ -17,7 +15,7 @@ class InformationSender(commands.Cog):
     async def __info(self, ctx, user: nextcord.Member = None):
         async with ctx.channel.typing():
 
-            locale.setlocale(locale.LC_TIME, "ru_RU")
+            locale.setlocale(locale.LC_TIME, "en_US.UTF-8")
             date_format = "%a, %d %b %Y %H:%M:%S"
 
             if user is None:
@@ -40,7 +38,7 @@ class InformationSender(commands.Cog):
             # готовое изображение постится самим ботом
 
             avatar = BytesIO()
-            await user.display_avatar.with_static_format("png").save(avatar)
+            await user.display_avatar.with_format("png").save(avatar)
 
             avatar = Image.open(avatar)
             avatar = avatar.resize((130, 130))
