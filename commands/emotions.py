@@ -34,7 +34,7 @@ class Emotions(commands.Cog):
 
         if balance < 5:
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
-            embed.add_field(name='Ошибка', value=f'У вас недостаточно {emoji} для отправки')
+            embed.add_field(name='Ошибка', value=f'У вас недостаточно {emoji} для использования команды, все команды эмоций стоят 5 {emoji}')
             cursor.close()
             db.close()
             return await ctx.send(embed=embed)
@@ -100,7 +100,7 @@ class Emotions(commands.Cog):
 
         if balance < 5:
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
-            embed.add_field(name='Ошибка', value=f'У вас недостаточно {emoji} для отправки')
+            embed.add_field(name='Ошибка', value=f'У вас недостаточно {emoji} для использования команды, все команды эмоций стоят 5 {emoji}')
             cursor.close()
             db.close()
             return await ctx.send(embed=embed)
@@ -174,7 +174,7 @@ class Emotions(commands.Cog):
 
         if balance < 5:
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
-            embed.add_field(name='Ошибка', value=f'У вас недостаточно {emoji} для отправки')
+            embed.add_field(name='Ошибка', value=f'У вас недостаточно {emoji} для использования команды, все команды эмоций стоят 5 {emoji}')
             cursor.close()
             db.close()
             return await ctx.send(embed=embed)
@@ -242,7 +242,7 @@ class Emotions(commands.Cog):
 
         if balance < 5:
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
-            embed.add_field(name='Ошибка', value=f'У вас недостаточно {emoji} для отправки')
+            embed.add_field(name='Ошибка', value=f'У вас недостаточно {emoji} для использования команды, все команды эмоций стоят 5 {emoji}')
             cursor.close()
             db.close()
             return await ctx.send(embed=embed)
@@ -295,7 +295,7 @@ class Emotions(commands.Cog):
 
         if balance < 5:
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
-            embed.add_field(name='Ошибка', value=f'У вас недостаточно {emoji} для отправки')
+            embed.add_field(name='Ошибка', value=f'У вас недостаточно {emoji} для использования команды, все команды эмоций стоят 5 {emoji}')
             cursor.close()
             db.close()
             return await ctx.send(embed=embed)
@@ -360,7 +360,7 @@ class Emotions(commands.Cog):
 
         if balance < 5:
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
-            embed.add_field(name='Ошибка', value=f'У вас недостаточно {emoji} для отправки')
+            embed.add_field(name='Ошибка', value=f'У вас недостаточно {emoji} для использования команды, все команды эмоций стоят 5 {emoji}')
             cursor.close()
             db.close()
             return await ctx.send(embed=embed)

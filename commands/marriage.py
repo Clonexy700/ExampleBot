@@ -66,6 +66,7 @@ class MarriageListener(commands.Cog):
 
     @commands.command(aliases=['marry', 'свадьба'])
     async def __marry(self, ctx, member: nextcord.Member = None):
+        emoji = "<a:emoji_1:995590858734841938>"
         if member is None:
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
             embed.add_field(name='Ошибка', value=f'Правильное написание команды: '
@@ -110,18 +111,31 @@ class MarriageListener(commands.Cog):
         result = cursor.fetchone()
         if result is None:
             sql = "INSERT INTO marriage(user_id, pair_id, date) VALUES (?, ?, ?)"
-            val = (user.id, 0, '0')
+            val = (member.id, 0, '0')
             cursor.execute(sql, val)
             db.commit()
+        cursor.execute(f"SELECT money FROM money WHERE user_id = {ctx.author.id}")
+        balance = cursor.fetchone()
+        try:
+            balance = balance[0]
+        except:
+            return await ctx.send('что-то с бд!!!')
+
+        if balance < 2000:
+            embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+            embed.add_field(name='Ошибка', value=f'У вас недостаточно {emoji}. Свадьба стоит 2000 {emoji}')
+            cursor.close()
+            db.close()
+            return await ctx.send(embed=embed)
         emoji_marry = self.client.get_emoji(995605076108382288)
         embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
         embed.add_field(name=f'{emoji_marry} Свадьба',
                         value=f'{ctx.author.mention} предлагает вам свою руку и сердце! {member.mention}',
                         inline=False)
         embed.add_field(name='Каков будет ваш ответ?',
-                        value='Вы можете ответить с помощью **да** или **нет**, у вас есть целая минута, '
+                        value='У вас есть целая минута, '
                               'чтобы принять '
-                              'решение!',
+                              'решение!\n С предложившего устроить свадьбу будет списано 2000 {emoji} при согласии',
                         inline=False)
         emoji_no = get(self.client.emojis, name='emoji_no')
         emoji_yes = get(self.client.emojis, name='emoji_yes')
@@ -171,6 +185,10 @@ class MarriageListener(commands.Cog):
             db.commit()
             sql = "UPDATE marriage SET date = ? WHERE user_id = ?"
             val = (date, member.id)
+            cursor.execute(sql, val)
+            db.commit()
+            sql = "UPDATE money SET money = ? WHERE user_id = ?"
+            val = (balance - 2000, ctx.author.id)
             cursor.execute(sql, val)
             db.commit()
         cursor.close()
