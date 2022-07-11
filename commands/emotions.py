@@ -66,9 +66,11 @@ class Emotions(commands.Cog):
                     "https://cdn.discordapp.com/attachments/621005423335702528/652822580310310924/JPEG_20190513_121707.jpg",
                     "https://cdn.discordapp.com/attachments/621005423335702528/652822932627652619/76_pLn7qnwk.jpg"
                     "https://cdn.discordapp.com/attachments/627524428447612949/655354838716121088/IwStTn6.gif"]
-        description = f'**Поцелуй**\n{ctx.author.mention} ✧ {user.mention}'
+        description = f'**Обнимашки**\n{ctx.author.mention} ✧ {user.mention}\n' \
+                      f'С вас снято `5` {emoji}\n`'
         if message is not None:
-            description = f'{description}\n{message}'
+            description = f'**Поцелуй**\n{ctx.author.mention} ✧ {user.mention}\n{message}\n' \
+                          f'С вас снято `5` {emoji}'
         embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at,
                                description=description)
         embed.set_author(name=self.client.user.name, icon_url=ctx.author.avatar.url)
@@ -140,9 +142,11 @@ class Emotions(commands.Cog):
                    "https://cdn.discordapp.com/attachments/624296774747553808/639093222844399632/22.gif",
                    "https://cdn.discordapp.com/attachments/626362221957742602/639754461044015104/rkIK_u7Pb.gif",
                    "https://cdn.discordapp.com/attachments/621005423335702528/652823412518944791/3ZRdtZ3Ykjg.jpg"]
-        description = f'**Обнимашки**\n{ctx.author.mention} ✧ {user.mention}'
+        description = f'**Обнимашки**\n{ctx.author.mention} ✧ {user.mention}\n' \
+                      f'С вас снято `5` {emoji}'
         if message is not None:
-            description = f'{description}\n{message}'
+            description = f'**Обнимашки**\n{ctx.author.mention} ✧ {user.mention}\n{message}\n' \
+                          f'С вас снято `5` {emoji}'
         embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at,
                                description=description)
         embed.set_author(name=self.client.user.name, icon_url=ctx.author.avatar.url)
@@ -208,9 +212,9 @@ class Emotions(commands.Cog):
                    "https://media1.tenor.com/images/ebd15359a3ae53d50a35055d79d325c9/tenor.gif?itemid=12018845",
                    "https://media1.tenor.com/images/2cf1704769d0227c69ebc4b6c85e274b/tenor.gif?itemid=10468802",
                    "https://media1.tenor.com/images/220babfd5f8b629cc16399497ed9dd96/tenor.gif?itemid=6130861"]
-        description = f'**Поглаживание**\n{ctx.author.mention} ✧ {user.mention}'
+        description = f'**Поглаживание**\n{ctx.author.mention} ✧ {user.mention}\nС вас снято `5` {emoji}'
         if message is not None:
-            description = f'{description}\n{message}'
+            description = f'{description}\n{message}\nС вас снято `5` {emoji}'
         embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at,
                                description=description)
         embed.set_author(name=self.client.user.name, icon_url=ctx.author.avatar.url)
@@ -261,9 +265,10 @@ class Emotions(commands.Cog):
                 "http://25.media.tumblr.com/b0b33a1a6d1ea4dc25a5160f29d37b7b/tumblr_mt4r5oDhu81sqaw4ao1_400.gif"
                ]
 
-        description = f'**Пятюня**\n{ctx.author.mention} ✧ {user.mention}'
+        description = f'**Пятюня**\n{ctx.author.mention} ✧ {user.mention}\nС вас снято `5` {emoji}'
         if message is not None:
-            description = f'{description}\n{message}'
+            description = f'**Пятюня**\n{ctx.author.mention} ✧ {user.mention}\n{message}\n' \
+                          f'С вас снято `5` {emoji}'
         embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at,
                                description=description)
         embed.set_author(name=self.client.user.name, icon_url=ctx.author.avatar.url)
@@ -326,9 +331,10 @@ class Emotions(commands.Cog):
                      "https://cdn.discordapp.com/attachments/624296774747553808/639094187903680522/31.gif",
                      "https://pa1.narvii.com/6329/041aa0724fb6e5dbf71681a80b86d5d1add8f8c8_hq.gif"]
 
-        description = f'**Удар**\n{ctx.author.mention} ударяет {user.mention}'
+        description = f'**Удар**\n{ctx.author.mention} ударяет {user.mention}\nС вас снято `5` {emoji}'
         if message is not None:
-            description = f'{description}\n{message}'
+            description = f'**Удар**\n{ctx.author.mention} ударяет {user.mention}\n{message}\n' \
+                          f'С вас снято `5` {emoji}'
         embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at,
                                description=description)
         embed.set_author(name=self.client.user.name, icon_url=ctx.author.avatar.url)
@@ -380,9 +386,10 @@ class Emotions(commands.Cog):
                     "https://media1.tenor.com/images/69546e40c361a59ce442c4d08e47bb05/tenor.gif?itemid=15157862",
                     "https://media1.tenor.com/images/f78e68053fcaf23a6ba7fbe6b0b6cff2/tenor.gif?itemid=10614631"]
 
-        description = f'**Кусь**\n{ctx.author.mention} ✧ {user.mention}'
+        description = f'**Кусь**\n{ctx.author.mention} ✧ {user.mention}\nС вас снято `5` {emoji}'
         if message is not None:
-            description = f'{description}\n{message}'
+            description = f'**Кусь**\n{ctx.author.mention} ✧ {user.mention}\n{message}\n' \
+                          f'С вас снято `5` {emoji}'
         embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at,
                                description=description)
         embed.set_author(name=self.client.user.name, icon_url=ctx.author.avatar.url)
