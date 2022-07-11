@@ -31,6 +31,14 @@ class System(commands.Cog):
                                                 f"\n`{settings['PREFIX']}slots/slot/слоты/казино <ставка>`"
                                                 f"\n`{settings['PREFIX']}gamble/гамбл <ставка>`"
                         , inline=False)
+        embed.add_field(name='Эмоции', value=f"Все эмоции стоят 5 {emoji}\n"
+                                             f"`{settings['PREFIX']}kiss/цмок/поцеловать <@> [сообщение]`"
+                                             f"\n`{settings['PREFIX']}kiss/цмок/поцеловать <@> [сообщение]`"
+                                             f"\n`{settings['PREFIX']}hug/обнять <@> [сообщение]`"
+                                             f"\n`{settings['PREFIX']}five/пять <@> [сообщение]`"
+                                             f"\n`{settings['PREFIX']}punch/ударить <@> [сообщение]`"
+                                             f"\n`{settings['PREFIX']}bite/кусь/укусить <@> [сообщение]`"
+                        , inline=False)
         embed.add_field(name='Информация, профили', value=f"`{settings['PREFIX']}me/profile/профиль/я <@>`",
                         inline=False)
         embed.add_field(name='Уровни, лвла', value=f"`{settings['PREFIX']}lvl/левел/лвл/левел <@>`"
