@@ -68,7 +68,7 @@ class Economics(commands.Cog):
                                'daily', 'награда', 'таймли', 'тайм', 'ежед', 'еже'])
     async def __daily(self, ctx):
 
-        emoji = self.client.get_emoji(settings['emoji_id'])
+        emoji = "<a:emoji_1:995590858734841938>"
 
         db = sqlite3.connect("./databases/main.sqlite")
         cursor = db.cursor()
@@ -86,11 +86,13 @@ class Economics(commands.Cog):
         cursor.close()
         db.close()
 
-        embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
-        embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar)
-        embed.add_field(name='Денежное вознаграждение', value=f'Вы получили 150 {emoji}')
-        embed.set_footer(text=random.choice(settings['footers']))
-
+        embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at,
+                               description=f'Вы получили __**150**__ {emoji}')
+        embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
+        embed.set_thumbnail(
+            url='https://cdn.discordapp.com/attachments/996084073569194084/996084305031872574/white_clock.png')
+        embed.set_footer(text=f"Команду можно использовать раз в 4 часа\n{random.choice(settings['footers'])}",
+                         icon_url=ctx.guild.icon.url)
         await ctx.send(embed=embed)
 
     @__daily.error
@@ -127,10 +129,11 @@ class Economics(commands.Cog):
         except:
             return await ctx.send('что-то с бд!!!')
 
-        embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
-        embed.set_author(name=user.name, icon_url=user.avatar.url)
-        embed.add_field(name='Баланс', value=f'У {user.mention} на счету `{balance}` {emoji}')
+        embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at,
+                               description=f"У вас на счету `{balance}` {emoji}")
+        embed.set_author(name=f"Баланс пользователя: {user.name}", icon_url=user.avatar.url)
         embed.set_footer(text=random.choice(settings['footers']), icon_url=ctx.guild.icon)
+        embed.set_thumbnail(url='https://cdn-icons-png.flaticon.com/512/6871/6871577.png')
 
         await ctx.send(embed=embed)
 
@@ -191,10 +194,11 @@ class Economics(commands.Cog):
 
         db.commit()
 
-        embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
-        embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar)
-        embed.add_field(name='Передача валюты', value=f'{ctx.author.mention} передал {user.mention} {amount} {emoji}')
-        embed.set_footer(text=f'транзакция №{random.randint(1, 1000000000)}', icon_url=user.avatar)
+        embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at,
+                               description=f'Были отправлены __**{amount}**__ {emoji} на баланс {user.mention}')
+        embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
+        embed.set_thumbnail(url=user.avatar.url)
+        embed.set_footer(text=f'транзакция №{random.randint(1, 1000000000)}', icon_url=ctx.guild.avatar.url)
 
         await ctx.send(embed=embed)
 
