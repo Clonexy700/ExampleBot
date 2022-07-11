@@ -32,7 +32,6 @@ class System(commands.Cog):
                                                 f"\n`{settings['PREFIX']}gamble/гамбл <ставка>`"
                         , inline=False)
         embed.add_field(name='Эмоции', value=f"Все эмоции стоят 5 {emoji}\n"
-                                             f"`{settings['PREFIX']}kiss/цмок/поцеловать <@> [сообщение]`"
                                              f"\n`{settings['PREFIX']}kiss/цмок/поцеловать <@> [сообщение]`"
                                              f"\n`{settings['PREFIX']}hug/обнять <@> [сообщение]`"
                                              f"\n`{settings['PREFIX']}five/пять <@> [сообщение]`"
