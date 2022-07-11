@@ -101,6 +101,7 @@ class InformationSender(commands.Cog):
             fundo.save(bv, "PNG", quality=100)
             bv.seek(0)
             file = nextcord.File(bv, filename="bv.png")
+            embed.set_image(url="attachment://bv.png")
 
             await ctx.send(embed=embed, file=file)
 

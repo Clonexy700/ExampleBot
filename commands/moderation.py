@@ -254,7 +254,7 @@ class Moderation(commands.Cog):
             cursor.close()
             db.close()
 
-    @commands.command(aliases=['warns', 'view'])
+    @commands.command(aliases=['warns', 'view', 'варны', 'преды'])
     async def __warns(self, ctx, user: nextcord.Member = None):
         if user is None:
             user = ctx.author

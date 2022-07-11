@@ -40,8 +40,9 @@ class System(commands.Cog):
                                               f"\n`{settings['PREFIX']}lp/lprofile/loveprofile`", inline=False)
         embed.add_field(name='Модерация', value=f"`{settings['PREFIX']}m/mute/мут <@> <время> <причина>`"
                                                 f"\n`{settings['PREFIX']}um/unmute/размут <@>`"
-                                                f"\n`{settings['PREFIX']}w/warn/варн/пред <@> <время> <причина>`",
-                        inline=False)
+                                                f"\n`{settings['PREFIX']}w/warn/варн/пред <@> <время> <причина>`"
+                                                f"\n`{settings['PREFIX']}warns/view/варны <@>`"
+                        , inline=False)
         embed.add_field(name='Системное', value=f"`{settings['PREFIX']}ping/пинг`", inline=False)
         embed.add_field(name='Войсы', value=f"`{settings['PREFIX']}vonline/online`"
                                             f"\n`{settings['PREFIX']}vtop/vld/втоп`", inline=False)
