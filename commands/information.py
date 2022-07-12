@@ -21,10 +21,11 @@ class InformationSender(commands.Cog):
             if user is None:
                 user = ctx.author
 
-            star = self.client.get_emoji(996097981050798140)
+            star = self.client.get_emoji(996245796099997756)
+            info = self.client.get_emoji(996245800613052486)
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
             embed.set_footer(text=f"ID: {user.id}\nКоманду вызвал: {ctx.author.name}", icon_url=ctx.author.avatar.url)
-            embed.add_field(name=f'{star} Аккаунт создан', value=f'```ini\n[{user.created_at.strftime(date_format)}]\n```',
+            embed.add_field(name=f'{info} Аккаунт создан', value=f'```ini\n[{user.created_at.strftime(date_format)}]\n```',
                             inline=False)
             roles = ' '.join([r.mention for r in user.roles[1:]])
             if len(roles) > 900:
@@ -49,6 +50,8 @@ class InformationSender(commands.Cog):
             output.save('avatar.png')
             avatar = Image.open('avatar.png')
             fundo = Image.open('./assets/profile_backgrounds/background.png')
+            if user.id == 314618320093577217:
+              fundo = Image.open('.assets/profile_background/background_clonexy.png')
             fonte2 = ImageFont.truetype('ARIALUNI.TTF', 18)
             escrever = ImageDraw.Draw(fundo)
 
@@ -83,17 +86,16 @@ class InformationSender(commands.Cog):
                 return await ctx.send('что-то с бд!!!')
             cursor.close()
             db.close()
-            embed.add_field(name='На сервер присоединился:',
-                            value=f'```ini\n[{user.created_at.strftime(date_format)}]\n```',
+            embed.add_field(name=f'{star} На сервер присоединился:',
+                            value=f'```ini\n[{user.joined_at.strftime(date_format)}]\n```',
                             inline=False)
-            voice = self.client.get_emoji(996098651191521320)
-            info = self.client.get_emoji(996098167097532437)
-            level = self.client.get_emoji(996097979620536350)
-            credit_card = self.client.get_emoji(996099780063268865)
+            voice = self.client.get_emoji(996245791947624528)
+            level = self.client.get_emoji(996245798801129473)
+            credit_card = self.client.get_emoji(996245797416996895)
             embed.add_field(name=f"{level} Уровень", value=f'```\n{cur_lvl}\n{cur_xp}|{next_xp}\n```', inline=True)
             embed.add_field(name=f'{credit_card} Баланс:', value=f'```{balance}```', inline=True)
             embed.add_field(name=f"{voice} Время в войсах", value=f"```{voice_time}```", inline=True)
-            embed.add_field(name=f"{info} Роли", value=roles, inline=True)
+            embed.add_field(name=f"Роли", value=roles, inline=True)
             escrever.text(xy=(250, 70),
                           text=f'   Уровень: {cur_lvl} \n   {cur_xp}/{next_xp} XP\n   Время в войсах: {voice_time}\n   '
                                f'Баланс: {balance}\n На сервер присоединился:\n '
