@@ -44,7 +44,9 @@ class System(commands.Cog):
                                                    f"\n`{settings['PREFIX']}ltop/lld/ld/лтоп`", inline=False)
         embed.add_field(name='Свадьбы', value=f"`{settings['PREFIX']}marry/свадьба <@>`"
                                               f"\n`{settings['PREFIX']}divorce/развод`"
-                                              f"\n`{settings['PREFIX']}lp/lprofile/loveprofile`", inline=False)
+                                              f"\n`{settings['PREFIX']}lp/lprofile/loveprofile`"
+                                              f"\n{settings['PREFIX']}lovetop/lptop/лптоп"
+                        , inline=False)
         embed.add_field(name='Модерация', value=f"`{settings['PREFIX']}m/mute/мут <@> <время> <причина>`"
                                                 f"\n`{settings['PREFIX']}um/unmute/размут <@>`"
                                                 f"\n`{settings['PREFIX']}w/warn/варн/пред <@> <время> <причина>`"

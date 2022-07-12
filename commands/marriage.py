@@ -143,6 +143,7 @@ class MarriageListener(commands.Cog):
 
         def check(reaction, user):
             return (reaction.message.id == msg.id) and (user == member)
+
         await msg.add_reaction(emoji_yes)
         await msg.add_reaction(emoji_no)
         print(emoji_yes.id)
@@ -271,6 +272,34 @@ class MarriageListener(commands.Cog):
         embed.add_field(name='_ _', value=f'{ctx.author.mention} :hearts: {user.mention}\n '
                                           f'Брак был заключен: `{date}`')
         await ctx.send(embed=embed)
+
+    @commands.cooldown(1, 6, commands.BucketType.guild)
+    @commands.command(aliases=['lptop', 'lovetop', 'лавтоп', 'лптоп'])
+    async def __love_leaderboard(self, ctx):
+        async with ctx.channel.typing():
+            counter = 0
+            db = sqlite3.connect("./databases/main.sqlite")
+            cursor = db.cursor()
+            users = []
+            already_was = []
+            for row in cursor.execute("SELECT user_id, pair_id, date FROM marriage ORDER BY date DESC LIMIT 15"):
+                if row[2] != '0':
+                    user = await self.client.fetch_user(row[0])
+                    pair = await self.client.fetch_user(row[1])
+                    if user not in already_was:
+                        if pair not in already_was:
+                            counter += 1
+                            already_was.append(user)
+                            if row[1] != 0:
+                                pair = await self.client.fetch_user(row[1])
+                                already_was.append(pair)
+
+                                users.append(f'`#{counter}`. {user.mention} и : {pair.mention}, дата: {row[2]}\n')
+            description = ' '.join([user for user in users])
+            embed = nextcord.Embed(title='Топ 15 пар', color=settings['defaultBotColor'],
+                                   timestamp=ctx.message.created_at, description=description)
+
+            await ctx.send(embed=embed)
 
 
 def setup(client):
