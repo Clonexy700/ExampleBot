@@ -23,6 +23,8 @@ class System(commands.Cog):
         embed.add_field(name='Команды Администратора', value=f"\n`{settings['PREFIX']}обьяв/announce`"
                                                              f"\n`{settings['PREFIX']}award/наградить <деньги>`"
                                                              f"\n`{settings['PREFIX']}withdraw/забрать <деньги>`"
+                                                             f"\n`{settings['PREFIX']}add-shop/добавить <роль>`"
+                                                             f"\n`{settings['PREFIX']}remove-shop/убрать <роль>`"
                         , inline=False)
         embed.add_field(name='Экономика', value=f"`{settings['PREFIX']}баланс/balance/bal/$ <@>`"
                                                 f"\n`{settings['PREFIX']}timely/еж/награда`"
@@ -30,6 +32,9 @@ class System(commands.Cog):
                                                 f"\n`{settings['PREFIX']}send/give/дать <@> <деньги>`"
                                                 f"\n`{settings['PREFIX']}slots/slot/слоты/казино <ставка>`"
                                                 f"\n`{settings['PREFIX']}gamble/гамбл <ставка>`"
+                        , inline=False)
+        embed.add_field(name='Магазин ролей', value=f"`{settings['PREFIX']}buy/купить <роль>`"
+                                                    f"\n`{settings['PREFIX']}market/shop/магазин`"
                         , inline=False)
         embed.add_field(name='Эмоции', value=f"Все эмоции стоят 5 {emoji}\n"
                                              f"\n`{settings['PREFIX']}kiss/цмок/поцеловать <@> [сообщение]`"
