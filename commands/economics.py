@@ -534,12 +534,20 @@ class Economics(commands.Cog):
     @commands.command(aliases=['add-shop', 'добавить', 'add'])
     async def __add_shop(self, ctx, role: nextcord.Role = None, cost: int = None):
         if role is None:
-            return await ctx.send('hui')
+            embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+            embed.add_field(name='Ошибка', value=f'Правильное написание команды:\n'
+                                                 f'{settings["PREFIX"]}добавить <роль> <цена>')
+            return await ctx.send(embed=embed)
         else:
             if cost is None:
-                return await ctx.send('hui')
+                embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+                embed.add_field(name='Ошибка', value=f'Правильное написание команды:\n'
+                                                     f'{settings["PREFIX"]}добавить <роль> <цена>')
+                return await ctx.send(embed=embed)
             elif cost < 0:
-                return await ctx.send('hui')
+                embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+                embed.add_field(name='Ошибка', value=f'Цена не может быть отрицательной')
+                return await ctx.send(embed=embed)
             else:
                 db = sqlite3.connect("./databases/main.sqlite")
                 cursor = db.cursor()
@@ -549,12 +557,18 @@ class Economics(commands.Cog):
                 db.commit()
                 cursor.close()
                 db.close()
-                await ctx.send('dobavila')
+                embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+                embed.add_field(name='Магазин', value=f'Роль {role.mention} была успешно добавлена в магазин')
+                embed.set_footer(text=random.choice(settings['footers']), icon_url=ctx.guild.icon)
+                await ctx.send(embed=embed)
 
     @commands.command(aliases=['remove-shop', 'убрать', 'remove'])
     async def __remove_shop(self, ctx, role: nextcord.Role = None):
         if role is None:
-            return await ctx.send('hui')
+            embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+            embed.add_field(name='Ошибка', value=f'Правильное написание команды:\n'
+                                                 f'{settings["PREFIX"]}убрать <роль>')
+            return await ctx.send(embed=embed)
         else:
             db = sqlite3.connect("./databases/main.sqlite")
             cursor = db.cursor()
@@ -563,47 +577,59 @@ class Economics(commands.Cog):
             db.commit()
             cursor.close()
             db.close()
-            await ctx.send('sdelala')
+            embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+            embed.add_field(name='Магазин', value=f'Роль {role.mention} была успешно убрана из магазина')
+            embed.set_footer(text=random.choice(settings['footers']), icon_url=ctx.guild.icon)
+            await ctx.send(embed=embed)
 
     @commands.command(aliases=['shop', 'market', 'магазин', 'маркет', 'шоп'])
     async def __market(self, ctx):
         emoji = "<a:emoji_1:995590858734841938>"
-        async with ctx.channel.typing():
-            counter = 0
-            db = sqlite3.connect("./databases/main.sqlite")
-            cursor = db.cursor()
+        counter = 0
+        db = sqlite3.connect("./databases/main.sqlite")
+        cursor = db.cursor()
 
-            roles = []
-            for row in cursor.execute(f"SELECT role_id, cost FROM shop WHERE guild_id = {ctx.guild.id}"):
-                role = ctx.guild.get_role(row[0])
-                if role is not None:
-                    counter += 1
-                    roles.append(f'**{counter}**. {role.mention}\nСтоимость: __**{row[1]}**__ {emoji}\n')
-            description = ' '.join([role for role in roles])
-            embed = nextcord.Embed(title='Магазин ролей', color=settings['defaultBotColor'],
-                                   timestamp=ctx.message.created_at, description=description)
-
-            await ctx.send(embed=embed)
+        roles = []
+        for row in cursor.execute(f"SELECT role_id, cost FROM shop WHERE guild_id = {ctx.guild.id}"):
+            role = ctx.guild.get_role(row[0])
+            if role is not None:
+                counter += 1
+                roles.append(f'**{counter}**. {role.mention}\nСтоимость: __**{row[1]}**__ {emoji}\n')
+        description = ' '.join([role for role in roles])
+        if len(roles) == 0:
+            description = 'Тут ничего нет...'
+        embed = nextcord.Embed(title='Магазин', color=settings['defaultBotColor'],
+                               timestamp=ctx.message.created_at, description=description)
+        embed.set_footer(text=random.choice(settings['footers']), icon_url=ctx.guild.icon)
+        await ctx.send(embed=embed)
 
     @commands.command(aliases=['buy', 'buy-role', 'купить'])
     async def __buy(self, ctx, role: nextcord.Role):
+        emoji = "<a:emoji_1:995590858734841938>"
         db = sqlite3.connect("./databases/main.sqlite")
         cursor = db.cursor()
         if role is None:
             cursor.close()
             db.close()
-            return await ctx.send('hui')
+            embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+            embed.add_field(name='Ошибка', value=f'Правильное написание команды:\n'
+                                                 f'{settings["PREFIX"]}купить <роль>')
+            return await ctx.send(embed=embed)
         else:
             if role in ctx.author.roles:
                 cursor.close()
                 db.close()
-                return await ctx.send(f'u tebya uzhe est eta rol')
+                embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+                embed.add_field(name='Ошибка', value=f'У вас уже есть эта роль, нельзя купить её снова!')
+                return await ctx.send(embed=embed)
 
             elif cursor.execute(f"SELECT cost FROM shop WHERE role_id = {role.id}").fetchone()[0] > \
                     cursor.execute(f"SELECT money FROM money WHERE user_id = {ctx.author.id}").fetchone()[0]:
                 cursor.close()
                 db.close()
-                return await ctx.send('hui')
+                embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+                embed.add_field(name='Ошибка', value=f'У вас недостаточно {emoji} для покупки')
+                return await ctx.send(embed=embed)
             else:
                 cost = cursor.execute(f"SELECT cost FROM shop WHERE role_id = {role.id}").fetchone()[0]
                 await ctx.author.add_roles(role)
@@ -620,7 +646,10 @@ class Economics(commands.Cog):
                 db.commit()
                 cursor.close()
                 db.close()
-                await ctx.send('prodano i dano')
+                embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+                embed.add_field(name='Магазин', value=f'Роль {role.mention} была куплена.')
+                embed.set_footer(text=f"остаточный баланс после операции: {balance-cost}", icon_url=ctx.guild.icon)
+                await ctx.send(embed=embed)
 
 
 def setup(client):
