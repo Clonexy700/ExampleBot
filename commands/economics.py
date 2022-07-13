@@ -20,6 +20,11 @@ class Economics(commands.Cog):
         )""")
         db.commit()
 
+        cursor.execute("""CREATE TABLE IF NOT EXISTS shop (
+            role_id INTERGER, guild_id INT, cost INTERGER
+        )""")
+        db.commit()
+
         for guild in self.client.guilds:
             for member in guild.members:
                 if not member.bot:
@@ -480,7 +485,6 @@ class Economics(commands.Cog):
             cursor.execute(sql, val)
             db.commit()
         cursor.execute(f"SELECT money FROM money WHERE user_id = {ctx.author.id}")
-        cursor.execute(f"SELECT money FROM money WHERE user_id = {ctx.author.id}")
         balance = cursor.fetchone()
         try:
             balance = balance[0]
@@ -526,6 +530,97 @@ class Economics(commands.Cog):
         await ctx.send(embed=embed)
         cursor.close()
         db.close()
+
+    @commands.command(aliases=['add-shop', 'добавить', 'add'])
+    async def __add_shop(self, ctx, role: nextcord.Role = None, cost: int = None):
+        if role is None:
+            return await ctx.send('hui')
+        else:
+            if cost is None:
+                return await ctx.send('hui')
+            elif cost < 0:
+                return await ctx.send('hui')
+            else:
+                db = sqlite3.connect("./databases/main.sqlite")
+                cursor = db.cursor()
+                sql = "INSERT INTO shop(role_id, guild_id, cost) VALUES (?, ?, ?)"
+                val = (role.id, ctx.guild.id, cost)
+                cursor.execute(sql, val)
+                db.commit()
+                cursor.close()
+                db.close()
+                await ctx.send('dobavila')
+
+    @commands.command(aliases=['remove-shop', 'убрать', 'remove'])
+    async def __remove_shop(self, ctx, role: nextcord.Role = None):
+        if role is None:
+            return await ctx.send('hui')
+        else:
+            db = sqlite3.connect("./databases/main.sqlite")
+            cursor = db.cursor()
+            sql = f"DELETE FROM shop WHERE role_id = {role.id}"
+            cursor.execute(sql)
+            db.commit()
+            cursor.close()
+            db.close()
+            await ctx.send('sdelala')
+
+    @commands.command(aliases=['shop', 'market', 'магазин', 'маркет', 'шоп'])
+    async def __market(self, ctx):
+        emoji = "<a:emoji_1:995590858734841938>"
+        async with ctx.channel.typing():
+            counter = 0
+            db = sqlite3.connect("./databases/main.sqlite")
+            cursor = db.cursor()
+
+            roles = []
+            for row in cursor.execute(f"SELECT role_id, cost FROM shop WHERE guild_id = {ctx.guild.id}"):
+                role = ctx.guild.get_role(row[0])
+                if role is not None:
+                    counter += 1
+                    roles.append(f'**{counter}**. {role.mention}\nСтоимость: __**{row[1]}**__ {emoji}\n')
+            description = ' '.join([role for role in roles])
+            embed = nextcord.Embed(title='Магазин ролей', color=settings['defaultBotColor'],
+                                   timestamp=ctx.message.created_at, description=description)
+
+            await ctx.send(embed=embed)
+
+    @commands.command(aliases=['buy', 'buy-role', 'купить'])
+    async def __buy(self, ctx, role: nextcord.Role):
+        db = sqlite3.connect("./databases/main.sqlite")
+        cursor = db.cursor()
+        if role is None:
+            cursor.close()
+            db.close()
+            return await ctx.send('hui')
+        else:
+            if role in ctx.author.roles:
+                cursor.close()
+                db.close()
+                return await ctx.send(f'u tebya uzhe est eta rol')
+
+            elif cursor.execute(f"SELECT cost FROM shop WHERE role_id = {role.id}").fetchone()[0] > \
+                    cursor.execute(f"SELECT money FROM money WHERE user_id = {ctx.author.id}").fetchone()[0]:
+                cursor.close()
+                db.close()
+                return await ctx.send('hui')
+            else:
+                cost = cursor.execute(f"SELECT cost FROM shop WHERE role_id = {role.id}").fetchone()[0]
+                await ctx.author.add_roles(role)
+                cursor.execute(f"SELECT money FROM money WHERE user_id = {ctx.author.id}")
+                balance = cursor.fetchone()
+                try:
+                    balance = balance[0]
+                except:
+                    return await ctx.send('что-то с бд!!!')
+
+                sql = "UPDATE money SET money = ? WHERE user_id = ?"
+                val = (balance - cost, ctx.author.id)
+                cursor.execute(sql, val)
+                db.commit()
+                cursor.close()
+                db.close()
+                await ctx.send('prodano i dano')
 
 
 def setup(client):
