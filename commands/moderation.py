@@ -145,7 +145,7 @@ class Moderation(commands.Cog):
         warn_count = cursor.execute(f"SELECT warns FROM warns WHERE user_id = {user.id}").fetchone()[0]
         if warn_count == 0:
             warn_count += 1
-            locale.setlocale(locale.LC_TIME, "ru_RU")
+            locale.setlocale(locale.LC_TIME, 'en_US.UTF-8')
             date_format = "%a, %d %b %Y %H:%M:%S"
             timestamp = datetime.datetime.now()
             date = timestamp.strftime(date_format)
@@ -166,7 +166,7 @@ class Moderation(commands.Cog):
             await asyncio.sleep(time_in_seconds)
             db = sqlite3.connect("./databases/main.sqlite")
             cursor = db.cursor()
-            locale.setlocale(locale.LC_TIME, "ru_RU")
+            locale.setlocale(locale.LC_TIME, 'en_US.UTF-8')
             sql = f"UPDATE warns SET date_{warn_count} = ? WHERE user_id = ?"
             val = ('0', user.id)
             cursor.execute(sql, val)
@@ -183,7 +183,7 @@ class Moderation(commands.Cog):
             db.close()
         elif warn_count == 1:
             warn_count += 1
-            locale.setlocale(locale.LC_TIME, "ru_RU")
+            locale.setlocale(locale.LC_TIME, 'en_US.UTF-8')
             date_format = "%a, %d %b %Y %H:%M:%S"
             timestamp = datetime.datetime.now()
             date = timestamp.strftime(date_format)
@@ -253,6 +253,120 @@ class Moderation(commands.Cog):
             db.commit()
             cursor.close()
             db.close()
+
+    @commands.command(aliases=['fullunwarn', 'fulluw', 'fuw', 'снятьпреды'])
+    @commands.has_permissions(administrator=True)
+    async def __unwarn_all(self, ctx, user: nextcord.Member = None):
+        if user is None:
+            embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+            embed.add_field(name='Ошибка', value=f'Укажите пользователя, правильное написание: \n'
+                                                 f'{settings["PREFIX"]}unwarn <пользователь>')
+            return await ctx.send(embed=embed)
+        if user == ctx.author:
+            embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+            embed.add_field(name='Ошибка', value=f'Нельзя снять варн самому себе')
+            return await ctx.send(embed=embed)
+        db = sqlite3.connect("./databases/main.sqlite")
+        cursor = db.cursor()
+        warn_count = cursor.execute(f"SELECT warns FROM warns WHERE user_id = {user.id}").fetchone()[0]
+        if warn_count == 0:
+            cursor.close()
+            db.close()
+            embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+            embed.add_field(name='Снятие варна', value=f'У пользователя {user.mention} __**0**__ варнов')
+            return await ctx.send(embed=embed)
+        elif warn_count > 0:
+            sql = f"UPDATE warns SET date_1 = ? WHERE user_id = ?"
+            val = ('0', user.id)
+            cursor.execute(sql, val)
+            db.commit()
+            sql = f"UPDATE warns SET reason_1 = ? WHERE user_id = ?"
+            val = ('0', user.id)
+            cursor.execute(sql, val)
+            db.commit()
+            sql = f"UPDATE warns SET warns = ? WHERE user_id = ?"
+            val = (0, user.id)
+            cursor.execute(sql, val)
+            db.commit()
+            sql = f"UPDATE warns SET date_2 = ? WHERE user_id = ?"
+            val = ('0', user.id)
+            cursor.execute(sql, val)
+            db.commit()
+            sql = f"UPDATE warns SET reason_2 = ? WHERE user_id = ?"
+            val = ('0', user.id)
+            cursor.execute(sql, val)
+            db.commit()
+            sql = f"UPDATE warns SET date_3 = ? WHERE user_id = ?"
+            val = ('0', user.id)
+            cursor.execute(sql, val)
+            db.commit()
+            sql = f"UPDATE warns SET reason_3 = ? WHERE user_id = ?"
+            val = ('0', user.id)
+            cursor.execute(sql, val)
+            db.commit()
+            cursor.close()
+            db.close()
+            embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+            embed.add_field(name='Снятие варна', value=f'Были сняты все варны \nУ пользователя {user.mention} теперь __**0**__ варнов')
+            return await ctx.send(embed=embed)
+
+    @commands.command(aliases=['unwarn', 'uw', 'анварн', 'снятьпред'])
+    @commands.has_permissions(administrator=True)
+    async def __unwarn(self, ctx, user: nextcord.Member = None):
+        if user is None:
+            embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+            embed.add_field(name='Ошибка', value=f'Укажите пользователя, правильное написание: \n'
+                                                 f'{settings["PREFIX"]}unwarn <пользователь>')
+            return await ctx.send(embed=embed)
+        if user == ctx.author:
+            embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+            embed.add_field(name='Ошибка', value=f'Нельзя снять варн самому себе')
+            return await ctx.send(embed=embed)
+        db = sqlite3.connect("./databases/main.sqlite")
+        cursor = db.cursor()
+        warn_count = cursor.execute(f"SELECT warns FROM warns WHERE user_id = {user.id}").fetchone()[0]
+        if warn_count == 0:
+            cursor.close()
+            db.close()
+            embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+            embed.add_field(name='Снятие варна', value=f'У пользователя {user.mention} __**0**__ варнов')
+            return await ctx.send(embed=embed)
+        elif warn_count == 1:
+            sql = f"UPDATE warns SET date_1 = ? WHERE user_id = ?"
+            val = ('0', user.id)
+            cursor.execute(sql, val)
+            db.commit()
+            sql = f"UPDATE warns SET reason_1 = ? WHERE user_id = ?"
+            val = ('0', user.id)
+            cursor.execute(sql, val)
+            db.commit()
+            sql = f"UPDATE warns SET warns = ? WHERE user_id = ?"
+            val = (0, user.id)
+            cursor.execute(sql, val)
+            db.commit()
+            cursor.close()
+            db.close()
+            embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+            embed.add_field(name='Снятие варна', value=f'Был снят варн \nУ пользователя {user.mention} теперь __**0**__ варнов')
+            return await ctx.send(embed=embed)
+        elif warn_count == 2:
+            sql = f"UPDATE warns SET date_2 = ? WHERE user_id = ?"
+            val = ('0', user.id)
+            cursor.execute(sql, val)
+            db.commit()
+            sql = f"UPDATE warns SET reason_2 = ? WHERE user_id = ?"
+            val = ('0', user.id)
+            cursor.execute(sql, val)
+            db.commit()
+            sql = f"UPDATE warns SET warns = ? WHERE user_id = ?"
+            val = (1, user.id)
+            cursor.execute(sql, val)
+            db.commit()
+            cursor.close()
+            db.close()
+            embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+            embed.add_field(name='Снятие варна', value=f'Был снят варн \nУ пользователя {user.mention} теперь __**1**__ варн')
+            return await ctx.send(embed=embed)
 
     @commands.command(aliases=['warns', 'view', 'варны', 'преды'])
     async def __warns(self, ctx, user: nextcord.Member = None):

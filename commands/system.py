@@ -25,6 +25,9 @@ class System(commands.Cog):
                                                              f"\n`{settings['PREFIX']}withdraw/забрать <деньги>`"
                                                              f"\n`{settings['PREFIX']}add-shop/добавить <роль>`"
                                                              f"\n`{settings['PREFIX']}remove-shop/убрать <роль>`"
+                                                             f"\n`{settings['PREFIX']}unwarn/uw/снятьпред <пользователь>`"
+                                                             f"\n`{settings['PREFIX']}fullunwarn/fuw/снятьпреды <пользователь>`"
+
                         , inline=False)
         embed.add_field(name='Экономика', value=f"`{settings['PREFIX']}баланс/balance/bal/$ <@>`"
                                                 f"\n`{settings['PREFIX']}timely/еж/награда`"

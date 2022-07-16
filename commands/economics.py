@@ -96,7 +96,7 @@ class Economics(commands.Cog):
         embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
         embed.set_thumbnail(
             url='https://cdn.discordapp.com/attachments/996084073569194084/996084305031872574/white_clock.png')
-        embed.set_footer(text=f"Команду можно использовать раз в 4 часа\n{random.choice(settings['footers'])}",
+        embed.set_footer(text=f"Команду можно использовать раз в 4 часа\n{random.choice(settings['footers'])}\nВНИМАНИЕ СЕЙЧАС ЗАПУЩЕНА ВЕРСИЯ БОТА ДЛЯ РАЗРАБОТКИ ВАШИ ДАННЫЕ НЕ БУДУТ СОХРАНЕНЫ",
                          icon_url=ctx.guild.icon.url)
         await ctx.send(embed=embed)
 
@@ -137,7 +137,7 @@ class Economics(commands.Cog):
         embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at,
                                description=f"У вас на счету `{balance}` {emoji}")
         embed.set_author(name=f"Баланс пользователя: {user.name}", icon_url=user.avatar.url)
-        embed.set_footer(text=random.choice(settings['footers']), icon_url=ctx.guild.icon)
+        embed.set_footer(text=f"{random.choice(settings['footers'])}\nВНИМАНИЕ СЕЙЧАС ЗАПУЩЕНА ВЕРСИЯ БОТА ДЛЯ РАЗРАБОТКИ ВАШИ ДАННЫЕ НЕ БУДУТ СОХРАНЕНЫ", icon_url=ctx.guild.icon)
         embed.set_thumbnail(url='https://cdn-icons-png.flaticon.com/512/6871/6871577.png')
 
         await ctx.send(embed=embed)
@@ -332,6 +332,7 @@ class Economics(commands.Cog):
 
     @commands.command(aliases=['slots', 'slot', 'casino', 'слоты'])
     async def __slots(self, ctx, amount: int = None):
+        await ctx.send('ВНИМАНИЕ СЕЙЧАС ЗАПУЩЕНА ВЕРСИЯ БОТА ДЛЯ РАЗРАБОТКИ ВАШИ ДАННЫЕ НЕ БУДУТ СОХРАНЕНЫ')
         emoji = "<a:emoji_1:995590858734841938>"
         pink_gem = self.client.get_emoji(995991602822656061)
         orange_gem = self.client.get_emoji(995991591149895710)
@@ -466,6 +467,7 @@ class Economics(commands.Cog):
 
     @commands.command(aliases=['gamble', 'гамбл'])
     async def __gamble(self, ctx, amount: int = None):
+        await ctx.send('ВНИМАНИЕ СЕЙЧАС ЗАПУЩЕНА ВЕРСИЯ БОТА ДЛЯ РАЗРАБОТКИ ВАШИ ДАННЫЕ НЕ БУДУТ СОХРАНЕНЫ')
         emoji = "<a:emoji_1:995590858734841938>"
         if amount is None:
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
@@ -604,26 +606,36 @@ class Economics(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(aliases=['buy', 'buy-role', 'купить'])
-    async def __buy(self, ctx, role: nextcord.Role):
+    async def __buy(self, ctx, number_of_role: int):
         emoji = "<a:emoji_1:995590858734841938>"
         db = sqlite3.connect("./databases/main.sqlite")
         cursor = db.cursor()
-        if role is None:
+        roles = []
+        try:
+            for row in cursor.execute(f"SELECT role_id, cost FROM shop WHERE guild_id = {ctx.guild.id}"):
+                role = ctx.guild.get_role(row[0])
+                roles.append(role)
+        except:
             cursor.close()
             db.close()
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
-            embed.add_field(name='Ошибка', value=f'Правильное написание команды:\n'
-                                                 f'{settings["PREFIX"]}купить <роль>')
+            embed.add_field(name='Ошибка', value=f'Возникла ошибка, может в магазине нет ролей или такой роли?')
+            return await ctx.send(embed=embed)
+        if len(roles) < number_of_role:
+            cursor.close()
+            db.close()
+            embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+            embed.add_field(name='Ошибка', value=f'Возникла ошибка, может в магазине нет ролей или такой роли?')
             return await ctx.send(embed=embed)
         else:
-            if role in ctx.author.roles:
+            if roles[number_of_role-1] in ctx.author.roles:
                 cursor.close()
                 db.close()
                 embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
                 embed.add_field(name='Ошибка', value=f'У вас уже есть эта роль, нельзя купить её снова!')
                 return await ctx.send(embed=embed)
 
-            elif cursor.execute(f"SELECT cost FROM shop WHERE role_id = {role.id}").fetchone()[0] > \
+            elif cursor.execute(f"SELECT cost FROM shop WHERE role_id = {roles[number_of_role-1].id}").fetchone()[0] > \
                     cursor.execute(f"SELECT money FROM money WHERE user_id = {ctx.author.id}").fetchone()[0]:
                 cursor.close()
                 db.close()
@@ -631,8 +643,8 @@ class Economics(commands.Cog):
                 embed.add_field(name='Ошибка', value=f'У вас недостаточно {emoji} для покупки')
                 return await ctx.send(embed=embed)
             else:
-                cost = cursor.execute(f"SELECT cost FROM shop WHERE role_id = {role.id}").fetchone()[0]
-                await ctx.author.add_roles(role)
+                cost = cursor.execute(f"SELECT cost FROM shop WHERE role_id = {roles[number_of_role-1].id}").fetchone()[0]
+                await ctx.author.add_roles(roles[number_of_role-1])
                 cursor.execute(f"SELECT money FROM money WHERE user_id = {ctx.author.id}")
                 balance = cursor.fetchone()
                 try:
@@ -647,7 +659,7 @@ class Economics(commands.Cog):
                 cursor.close()
                 db.close()
                 embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
-                embed.add_field(name='Магазин', value=f'Роль {role.mention} была куплена.')
+                embed.add_field(name='Магазин', value=f'Роль {roles[number_of_role-1].mention} была куплена.')
                 embed.set_footer(text=f"остаточный баланс после операции: {balance-cost}", icon_url=ctx.guild.icon)
                 await ctx.send(embed=embed)
 

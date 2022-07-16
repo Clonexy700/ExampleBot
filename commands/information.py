@@ -51,7 +51,7 @@ class InformationSender(commands.Cog):
             avatar = Image.open('avatar.png')
             fundo = Image.open('./assets/profile_backgrounds/background.png')
             if user.id == 314618320093577217:
-              fundo = Image.open('.assets/profile_background/background_clonexy.png')
+              fundo = Image.open('./assets/profile_backgrounds/background_clonexy.png')
             fonte2 = ImageFont.truetype('ARIALUNI.TTF', 18)
             escrever = ImageDraw.Draw(fundo)
 
@@ -68,7 +68,7 @@ class InformationSender(commands.Cog):
 
             cur_xp = exp
             cur_lvl = level
-            next_xp = round((30 * (cur_lvl ** 2)))
+            next_xp = round((3000 * (cur_lvl ** 2)))
 
             voice_time = cursor.execute(f"SELECT time FROM voice WHERE user_id = {user.id}").fetchone()[0]
 
@@ -86,7 +86,7 @@ class InformationSender(commands.Cog):
                 return await ctx.send('что-то с бд!!!')
             cursor.close()
             db.close()
-            embed.add_field(name=f'{star} На сервер присоединился:',
+            embed.add_field(name=f'{star} это версия бота для разработки!!!!!!!!!!!!!!!!!!!!!',
                             value=f'```ini\n[{user.joined_at.strftime(date_format)}]\n```',
                             inline=False)
             voice = self.client.get_emoji(996245791947624528)

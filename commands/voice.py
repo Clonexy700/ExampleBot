@@ -4,7 +4,9 @@ import sqlite3
 import random
 import datetime
 import humanfriendly
+from datetime import timedelta
 import asyncio
+import re
 import locale
 from config import settings
 
@@ -46,88 +48,104 @@ class VoiceHandler(commands.Cog):
         new_user = member.id
         query = cursor.execute(f"SELECT join_time FROM voice WHERE user_id = {member.id}").fetchone()[0]
         if query != '0':
-            voice_leave_time = datetime.datetime.now().time().strftime('%H:%M:%S')
-            voice_join_time = query
+            if before.voice.voice_channel is not None and after.voice.voice_channel is None:
 
-            calculate_time = (
-                    datetime.datetime.strptime(voice_leave_time, '%H:%M:%S') - datetime.datetime.strptime(
-                voice_join_time, '%H:%M:%S'))
+                voice_leave_time = datetime.datetime.now().time().strftime('%H:%M:%S')
+                voice_join_time = query
 
-            minutes_in_voice = int(
-                calculate_time.total_seconds() / 60)  # считаем минуты в войсе чтобы начислить валюту и опыт
+                calculate_time = (
+                        datetime.datetime.strptime(voice_leave_time, '%H:%M:%S') - datetime.datetime.strptime(
+                    voice_join_time, '%H:%M:%S'))
 
-            second_in_voice = calculate_time.total_seconds()
+                minutes_in_voice = int(
+                    calculate_time.total_seconds() / 60)  # считаем минуты в войсе чтобы начислить валюту и опыт
 
-            timing = cursor.execute(f"SELECT time FROM voice WHERE user_id = {member.id}").fetchone()[0]
-            if timing == '0':
-                timing = '0:00:00'
+                second_in_voice = calculate_time.total_seconds()
 
-            add_time = (
-                    datetime.datetime.strptime(timing, '%H:%M:%S') +
-                    datetime.timedelta(seconds=second_in_voice))
+                timing = cursor.execute(f"SELECT time FROM voice WHERE user_id = {member.id}").fetchone()[0]
 
-            add_time = add_time.strftime("%H:%M:%S")
-            sql = "UPDATE voice SET time = ? WHERE user_id = ?"
-            val = (add_time, new_user)
-            cursor.execute(sql, val)
-            db.commit()
+                def parseTimeDelta(s):
+                    d = re.match(
+                        r'((?P<days>\d+) days, )?(?P<hours>\d+):'
+                        r'(?P<minutes>\d+):(?P<seconds>\d+)',
+                        str(s)).groupdict(0)
+                    return timedelta(**dict(((key, int(value))
+                                             for key, value in d.items())))
 
-            sql = "UPDATE voice SET join_time = ? WHERE user_id = ?"
-            val = ('0', new_user)
-            cursor.execute(sql, val)
-            db.commit()
+                def get_duration(duration):
+                    hours = int(duration / 3600)
+                    minutes = int(duration % 3600 / 60)
+                    seconds = int((duration % 3600) % 60)
+                    return '{:02d}:{:02d}:{:02d}'.format(hours, minutes, seconds)
 
-            cursor.execute(f"SELECT user_id FROM levels WHERE user_id = {new_user}")
-
-            result = cursor.fetchone()
-            if result is None:
-                sql = "INSERT INTO levels(user_id, lvl, exp) VALUES (?, ?, ?)"
-                val = (new_user, 1, 0)
+                if timing == '0':
+                    time_for_bd = get_duration(second_in_voice)
+                else:
+                    add_time = (parseTimeDelta(timing) + timedelta(seconds=second_in_voice))
+                    duration = add_time.total_seconds()
+                    time_for_bd = (get_duration(duration))
+                sql = "UPDATE voice SET time = ? WHERE user_id = ?"
+                val = (str(time_for_bd), new_user)
                 cursor.execute(sql, val)
                 db.commit()
 
-            cursor.execute(f"SELECT exp FROM levels WHERE user_id = {new_user}")
-            current_exp = cursor.fetchone()
-            try:
-                current_exp = current_exp[0]
-            except:
-                return await print('что-то с бд!!!')
-
-            sql = "UPDATE levels SET exp = ? WHERE user_id = ?"
-            val = (current_exp + int(random.randint(1, 3) * minutes_in_voice), new_user)
-            cursor.execute(sql, val)
-            db.commit()
-
-            cursor.execute(f"SELECT user_id FROM money WHERE user_id = {new_user}")
-            result = cursor.fetchone()
-            if result is None:
-                sql = "INSERT INTO money(user_id, money) VALUES (?, ?)"
-                val = (new_user, 100)
+                sql = "UPDATE voice SET join_time = ? WHERE user_id = ?"
+                val = ('0', new_user)
                 cursor.execute(sql, val)
                 db.commit()
 
-            cursor.execute(f"SELECT money FROM money WHERE user_id = {new_user}")
-            balance = cursor.fetchone()
-            try:
-                balance = balance[0]
-            except:
-                return await ctx.send('что-то с бд!!!')
+                cursor.execute(f"SELECT user_id FROM levels WHERE user_id = {new_user}")
 
-            sql = "UPDATE money SET money = ? WHERE user_id = ?"
-            val = (balance + int(random.randint(2, 6) * minutes_in_voice), new_user)
-            cursor.execute(sql, val)
-            db.commit()
-            cursor.close()
-            db.close()
+                result = cursor.fetchone()
+                if result is None:
+                    sql = "INSERT INTO levels(user_id, lvl, exp) VALUES (?, ?, ?)"
+                    val = (new_user, 1, 0)
+                    cursor.execute(sql, val)
+                    db.commit()
+
+                cursor.execute(f"SELECT exp FROM levels WHERE user_id = {new_user}")
+                current_exp = cursor.fetchone()
+                try:
+                    current_exp = current_exp[0]
+                except:
+                    return await print('что-то с бд!!!')
+
+                sql = "UPDATE levels SET exp = ? WHERE user_id = ?"
+                val = (abs(current_exp + int(random.randint(1, 2) * minutes_in_voice)), new_user)
+                cursor.execute(sql, val)
+                db.commit()
+
+                cursor.execute(f"SELECT user_id FROM money WHERE user_id = {new_user}")
+                result = cursor.fetchone()
+                if result is None:
+                    sql = "INSERT INTO money(user_id, money) VALUES (?, ?)"
+                    val = (new_user, 100)
+                    cursor.execute(sql, val)
+                    db.commit()
+
+                cursor.execute(f"SELECT money FROM money WHERE user_id = {new_user}")
+                balance = cursor.fetchone()
+                try:
+                    balance = balance[0]
+                except:
+                    return await print('что-то с бд!!!')
+
+                sql = "UPDATE money SET money = ? WHERE user_id = ?"
+                val = ((abs(balance + int(6) * minutes_in_voice)), new_user)
+                cursor.execute(sql, val)
+                db.commit()
+                cursor.close()
+                db.close()
 
         else:
-            new_voice_join_time = datetime.datetime.now().time().strftime('%H:%M:%S')
-            sql = "UPDATE voice SET join_time = ? WHERE user_id = ?"
-            val = (new_voice_join_time, new_user)
-            cursor.execute(sql, val)
-            db.commit()
-            cursor.close()
-            db.close()
+            if before.voice.voice_channel is None and after.voice.voice_channel is not None:
+                new_voice_join_time = datetime.datetime.now().time().strftime('%H:%M:%S')
+                sql = "UPDATE voice SET join_time = ? WHERE user_id = ?"
+                val = (new_voice_join_time, new_user)
+                cursor.execute(sql, val)
+                db.commit()
+                cursor.close()
+                db.close()
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
@@ -157,10 +175,10 @@ class VoiceHandler(commands.Cog):
                 voice_members.add(member.id)
         number_of_people_in_voice = len(voice_members)
         embed.add_field(name='Время пользователя в голосовых каналах', value=f'Вы провели `{user_time}` времени'
-                                                                            f' в голосовых чатах сервера!\n '
-                                                                            f'В голосовых чатах сервера сейчас всего:'
-                                                                            f'`{number_of_people_in_voice}`'
-                                                                            f'пользователей')
+                                                                             f' в голосовых чатах сервера!\n '
+                                                                             f'В голосовых чатах сервера сейчас всего:'
+                                                                             f'`{number_of_people_in_voice}`'
+                                                                             f'пользователей')
         embed.set_footer(text=random.choice(settings['footers']))
 
         await ctx.send(embed=embed)
@@ -182,7 +200,8 @@ class VoiceHandler(commands.Cog):
                 user = await self.client.fetch_user(row[0])
                 users.append(f'`#{counter}`. {user.mention}, `Время: {row[1]}\n`')
             description = ' '.join([user for user in users])
-            embed = nextcord.Embed(title='Топ 15 сервера по времени в голосовых каналах', color=settings['defaultBotColor'],
+            embed = nextcord.Embed(title='Топ 15 сервера по времени в голосовых каналах',
+                                   color=settings['defaultBotColor'],
                                    timestamp=ctx.message.created_at, description=description)
 
             await ctx.send(embed=embed)

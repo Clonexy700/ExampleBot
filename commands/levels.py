@@ -24,7 +24,7 @@ class LevelingSystem(commands.Cog):
         except:
             return print('что-то с бд!!!')
 
-        if current_exp >= round((30 * (current_lvl ** 2))):
+        if current_exp >= round((3000 * (current_lvl ** 2))):
 
             sql = "UPDATE levels SET lvl = ? WHERE user_id = ?"
             val = (current_lvl + 1, author_id)
@@ -67,6 +67,8 @@ class LevelingSystem(commands.Cog):
             return
         if not message.guild:
             return
+        if message.channel.id == 985217527447683132:
+            return
         author_id = message.author.id
         db = sqlite3.connect("./databases/main.sqlite")
         cursor = db.cursor()
@@ -103,7 +105,7 @@ class LevelingSystem(commands.Cog):
             except:
                 print('БД ПИЗДЕЦ')
             embed.add_field(name='Повышение уровня',
-                            value=f"{message.author.mention} достиг {current_lvl} уровня.")
+                            value=f"{message.author.mention} достиг {current_lvl} уровня.\nВнимание, это версия разработчика и данные сохранены не будут")
             await message.channel.send(embed=embed)
 
         cursor.close()
@@ -148,7 +150,7 @@ class LevelingSystem(commands.Cog):
 
         embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
         embed.set_author(name=user.name, icon_url=user.avatar.url)
-        embed.add_field(name='Уровень', value=f'Ваш уровень: `{level}`\n Опыт: `{exp}/{round((30 * (level ** 2)))}`')
+        embed.add_field(name='Уровень', value=f'Ваш уровень: `{level}`\n Опыт: `{exp}/{round((3000 * (level ** 2)))}`\nВНИМАНИЕ СЕЙЧАС ЗАПУЩЕНА ВЕРСИЯ БОТА ДЛЯ РАЗРАБОТКИ , ваши данные на ней НЕ БУДУТ СОХРАНЕНЫ')
         embed.set_footer(text=random.choice(settings['footers']))
 
         await ctx.send(embed=embed)

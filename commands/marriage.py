@@ -66,6 +66,7 @@ class MarriageListener(commands.Cog):
 
     @commands.command(aliases=['marry', 'свадьба'])
     async def __marry(self, ctx, member: nextcord.Member = None):
+        await ctx.send('ВНИМАНИЕ СЕЙЧАС ЗАПУЩЕНА ВЕРСИЯ БОТА ДЛЯ РАЗРАБОТКИ ВАШИ ДАННЫЕ НЕ БУДУТ СОХРАНЕНЫ')
         emoji = "<a:emoji_1:995590858734841938>"
         if member is None:
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
@@ -207,6 +208,7 @@ class MarriageListener(commands.Cog):
 
     @commands.command(aliases=['divorce', 'развод'])
     async def __divorce(self, ctx):
+        await ctx.send('ВНИМАНИЕ СЕЙЧАС ЗАПУЩЕНА ВЕРСИЯ БОТА ДЛЯ РАЗРАБОТКИ ВАШИ ДАННЫЕ НЕ БУДУТ СОХРАНЕНЫ')
         emoji_marry = self.client.get_emoji(995605076108382288)
         db = sqlite3.connect("./databases/main.sqlite")
         cursor = db.cursor()
@@ -246,6 +248,7 @@ class MarriageListener(commands.Cog):
 
     @commands.command(aliases=['lprofile', 'lp', 'lovep', 'loveprofile'])
     async def __lprofile(self, ctx):
+        await ctx.send('ВНИМАНИЕ СЕЙЧАС ЗАПУЩЕНА ВЕРСИЯ БОТА ДЛЯ РАЗРАБОТКИ ВАШИ ДАННЫЕ НЕ БУДУТ СОХРАНЕНЫ')
         db = sqlite3.connect("./databases/main.sqlite")
         cursor = db.cursor()
         cursor.execute(f"SELECT pair_id FROM marriage WHERE user_id = {ctx.author.id}")
@@ -276,6 +279,7 @@ class MarriageListener(commands.Cog):
     @commands.cooldown(1, 6, commands.BucketType.guild)
     @commands.command(aliases=['lptop', 'lovetop', 'лавтоп', 'лптоп'])
     async def __love_leaderboard(self, ctx):
+        await ctx.send('ВНИМАНИЕ СЕЙЧАС ЗАПУЩЕНА ВЕРСИЯ БОТА ДЛЯ РАЗРАБОТКИ ВАШИ ДАННЫЕ НЕ БУДУТ СОХРАНЕНЫ')
         async with ctx.channel.typing():
             counter = 0
             db = sqlite3.connect("./databases/main.sqlite")
