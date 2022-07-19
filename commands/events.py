@@ -19,7 +19,8 @@ class EventsListener(commands.Cog):
         ban_links = ["discord.gg", ".gg"]
         for link in ban_links:
             if link in message_content:
-                await message.delete()
+                if message.author.guild_permissions.administrator is not True:
+                    await message.delete()
 
 
 def setup(client):

@@ -239,8 +239,8 @@ class Economics(commands.Cog):
         raise error
 
     @commands.has_permissions(administrator=True)
-    @commands.command(aliases=['take', 'withdraw', 'забрать'])
-    async def __withdraw(self, ctx, user: nextcord.Member = None, amount: int = None):
+    @commands.command(aliases=['take', 'забрать'])
+    async def __take(self, ctx, user: nextcord.Member = None, amount: int = None):
         emoji = self.client.get_emoji(settings['emoji_id'])
         emoji = self.client.get_emoji(settings['emoji_id'])
         if user is None:

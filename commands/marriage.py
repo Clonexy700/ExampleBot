@@ -228,14 +228,15 @@ class MarriageListener(commands.Cog):
             embed.add_field(name='Ошибка', value=f'Вы ни с кем не женаты, невозможно внести деньги на семейный счёт')
             return await ctx.send(embed=embed)
         else:
-            family_balance_1 = cursor.execute(f"SELECT bank FROM marriage WHERE user_id = {ctx.author.id}").fetchone()[0]
+            family_balance_1 = cursor.execute(f"SELECT bank FROM marriage WHERE user_id = {ctx.author.id}").fetchone()[
+                0]
             family_balance_2 = cursor.execute(f"SELECT bank FROM marriage WHERE user_id = {partner}").fetchone()[0]
             sql = "UPDATE marriage SET bank = ? WHERE user_id = ?"
-            val = (family_balance_1+amount, ctx.author.id)
+            val = (family_balance_1 + amount, ctx.author.id)
             cursor.execute(sql, val)
             db.commit()
             sql = "UPDATE marriage SET bank = ? WHERE user_id = ?"
-            val = (family_balance_2+amount, partner)
+            val = (family_balance_2 + amount, partner)
             cursor.execute(sql, val)
             db.commit()
             emoji_marry = self.client.get_emoji(995605076108382288)
@@ -244,11 +245,70 @@ class MarriageListener(commands.Cog):
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
             embed.add_field(name="Семейный счёт",
                             value=f"Были внесены {emoji} на семейный счёт.\n "
-                                  f"Теперь он составляет: **{family_balance_1+amount}** {emoji}")
-            embed.set_footer(icon_url=ctx.guild.avatar.url, text=f"использовал команду {ctx.author}")
+                                  f"Теперь он составляет: **{family_balance_1 + amount}** {emoji}")
+            embed.set_footer(icon_url=ctx.guild.icon.url, text=f"использовал команду {ctx.author}")
             await ctx.send(embed=embed)
 
+    @commands.command(aliases=['withdraw'])
+    async def __withdraw(self, ctx, amount: int):
+        emoji = "<a:emoji_1:995590858734841938>"
+        db = sqlite3.connect("./databases/main.sqlite")
+        cursor = db.cursor()
+        cursor.execute(f"SELECT pair_id FROM marriage WHERE user_id = {ctx.author.id}")
+        partner = cursor.fetchone()
+        try:
+            partner = partner[0]
+        except:
+            return await ctx.send('что-то с бд!!!')
+        if partner == 0:
+            embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+            embed.add_field(name='Ошибка', value=f'Вы ни с кем не женаты, невозможно внести деньги на семейный счёт')
+            return await ctx.send(embed=embed)
+        family_balance_1 = cursor.execute(f"SELECT bank FROM marriage WHERE user_id = {ctx.author.id}").fetchone()[0]
+        family_balance_2 = cursor.execute(f"SELECT bank FROM marriage WHERE user_id = {partner}").fetchone()[0]
+        if family_balance_1 < amount or family_balance_2 < amount:
+            embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+            embed.add_field(name='Ошибка', value=f'На семейном счету недостаточно денег для снятия')
+            return await ctx.send(embed=embed)
+        else:
+            embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+            embed.add_field(name='Подтверждение',
+                            value=f'Второй партнёр должен подтвердить снятие денег со счёта в течении минуты')
+            msg = await ctx.send(embed=embed)
 
+            def check(reaction, user):
+                return (reaction.message.id == msg.id) and (user.id == partner)
+
+            await msg.add_reaction('✅')
+            try:
+                reaction, user = await self.client.wait_for('reaction_add', check=check, timeout=60)
+            except asyncio.TimeoutError:
+                return
+            if str(reaction) == '✅':
+                cursor.execute(f"SELECT money FROM money WHERE user_id = {ctx.author.id}")
+                balance = cursor.fetchone()
+                try:
+                    balance = balance[0]
+                except:
+                    return await ctx.send('что-то с бд!!!')
+                sql = "UPDATE marriage SET bank = ? WHERE user_id = ?"
+                val = (family_balance_1 - amount, ctx.author.id)
+                cursor.execute(sql, val)
+                db.commit()
+                sql = "UPDATE marriage SET bank = ? WHERE user_id = ?"
+                val = (family_balance_2 - amount, partner)
+                cursor.execute(sql, val)
+                db.commit()
+                sql = "UPDATE money SET money = ? WHERE user_id = ?"
+                val = (balance + amount, ctx.author.id)
+                cursor.execute(sql, val)
+                db.commit()
+                embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+                embed.add_field(name="Семейный счёт",
+                                value=f"Были сняты {emoji} на семейный счёт.\n "
+                                      f"Теперь он составляет: **{family_balance_1 - amount}** {emoji}")
+                embed.set_footer(icon_url=ctx.guild.icon.url, text=f"использовал команду {ctx.author}")
+                await ctx.send(embed=embed)
 
     @__marry.error
     async def marry_timeout(self, ctx, error):
