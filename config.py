@@ -1,7 +1,7 @@
 import nextcord
 
 settings = {
-    'PREFIX': '!',
+    'PREFIX': 's',
     'defaultBotColor': nextcord.Color.from_rgb(48, 49, 54),
     'presences': ['meow!', 'wanna dance?', 'brave shine!'],
     'footers': ["૮ ˶ᵔ ᵕ ᵔ˶ ა', '( ´ ▽ ` )b", "ﾟ･:*｡(ꈍᴗꈍ)ε｀*)~｡*:･ﾟ", "ಠ_ಠ", "/╲/( ͡° ͡° ͜ʖ ͡° ͡°)/\╱\ ", "ʕ •ᴥ•ʔ",

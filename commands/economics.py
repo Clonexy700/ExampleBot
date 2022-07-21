@@ -3,6 +3,7 @@ from nextcord.ext import commands
 from nextcord.utils import get
 import random
 import datetime
+from random import shuffle
 import sqlite3
 from config import settings
 
@@ -96,8 +97,9 @@ class Economics(commands.Cog):
         embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
         embed.set_thumbnail(
             url='https://cdn.discordapp.com/attachments/996084073569194084/996084305031872574/white_clock.png')
-        embed.set_footer(text=f"Команду можно использовать раз в 4 часа\n{random.choice(settings['footers'])}\nВНИМАНИЕ СЕЙЧАС ЗАПУЩЕНА ВЕРСИЯ БОТА ДЛЯ РАЗРАБОТКИ ВАШИ ДАННЫЕ НЕ БУДУТ СОХРАНЕНЫ",
-                         icon_url=ctx.guild.icon.url)
+        embed.set_footer(
+            text=f"Команду можно использовать раз в 4 часа\n{random.choice(settings['footers'])}\nВНИМАНИЕ СЕЙЧАС ЗАПУЩЕНА ВЕРСИЯ БОТА ДЛЯ РАЗРАБОТКИ ВАШИ ДАННЫЕ НЕ БУДУТ СОХРАНЕНЫ",
+            icon_url=ctx.guild.icon.url)
         await ctx.send(embed=embed)
 
     @__daily.error
@@ -137,7 +139,9 @@ class Economics(commands.Cog):
         embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at,
                                description=f"У вас на счету `{balance}` {emoji}")
         embed.set_author(name=f"Баланс пользователя: {user.name}", icon_url=user.avatar.url)
-        embed.set_footer(text=f"{random.choice(settings['footers'])}\nВНИМАНИЕ СЕЙЧАС ЗАПУЩЕНА ВЕРСИЯ БОТА ДЛЯ РАЗРАБОТКИ ВАШИ ДАННЫЕ НЕ БУДУТ СОХРАНЕНЫ", icon_url=ctx.guild.icon)
+        embed.set_footer(
+            text=f"{random.choice(settings['footers'])}\nВНИМАНИЕ СЕЙЧАС ЗАПУЩЕНА ВЕРСИЯ БОТА ДЛЯ РАЗРАБОТКИ ВАШИ ДАННЫЕ НЕ БУДУТ СОХРАНЕНЫ",
+            icon_url=ctx.guild.icon)
         embed.set_thumbnail(url='https://cdn-icons-png.flaticon.com/512/6871/6871577.png')
 
         await ctx.send(embed=embed)
@@ -330,25 +334,28 @@ class Economics(commands.Cog):
         cursor.close()
         db.close()
 
-    @commands.command(aliases=['slots', 'slot', 'casino', 'слоты'])
+    @commands.command(aliases=['slots', 'slot', 'casino', 'слоты', 'казино'])
     async def __slots(self, ctx, amount: int = None):
-        await ctx.send('ВНИМАНИЕ СЕЙЧАС ЗАПУЩЕНА ВЕРСИЯ БОТА ДЛЯ РАЗРАБОТКИ ВАШИ ДАННЫЕ НЕ БУДУТ СОХРАНЕНЫ')
         emoji = "<a:emoji_1:995590858734841938>"
         pink_gem = self.client.get_emoji(995991602822656061)
         orange_gem = self.client.get_emoji(995991591149895710)
         blue_gem = self.client.get_emoji(995991579502317568)
         green_gem = self.client.get_emoji(995991556798545961)
         purple_gem = self.client.get_emoji(995991536863035454)
+        random.seed(random.randint(1, 9941287654123444254))
+        today_we_try_to_roll_second = random.randint(1, 1000)
+        today_maybe_win_slot_1 = random.randint(1, 100)
+        today_maybe_win_slot_2 = random.randint(1, 100)
 
         if amount is None:
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
             embed.add_field(name='Ошибка', value=f'Правильное написание команды:\n'
                                                  f'{settings["PREFIX"]}slots <ставка>')
             return await ctx.send(embed=embed)
-        if amount <= 0:
+        if amount < 150:
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
-            embed.add_field(name='Ошибка', value=f'Укажите количество валюты: '
-                                                 f'{settings["PREFIX"]}give <пользователь> <количество>')
+            embed.add_field(name='Ошибка', value=f'Укажите ставку больше чем **150** {emoji}\n '
+                                                 f'{settings["PREFIX"]}slots <ставка>')
             return await ctx.send(embed=embed)
         db = sqlite3.connect("./databases/main.sqlite")
         cursor = db.cursor()
@@ -374,43 +381,53 @@ class Economics(commands.Cog):
         your_row = []
         third_row = []
         emoji_list = []
+        counter = 1
         emoji_list.append(pink_gem)
         emoji_list.append(orange_gem)
         emoji_list.append(blue_gem)
         emoji_list.append(green_gem)
         emoji_list.append(purple_gem)
+        shuffle(emoji_list)
         for i in range(3):
-            emojii = random.choice(emoji_list)
-            first_row.append(emojii)
-            emojii = random.choice(emoji_list)
-            your_row.append(emojii)
-            emojii = random.choice(emoji_list)
-            third_row.append(emojii)
+            first_row.append(random.choice(emoji_list))
+            third_row.append(random.choice(emoji_list))
+            if counter == 3:
+                if today_maybe_win_slot_2 > 25:
+                    your_row.append(random.choice(emoji_list))
+                else:
+                    emoji_to_append = (random.choice(emoji_list))
+                    while emoji_to_append in your_row:
+                        emoji_to_append = (random.choice(emoji_list))
+                    if emoji_to_append not in your_row:
+                        your_row.append(emoji_to_append)
+            if counter == 2:
+                if today_we_try_to_roll_second > 100:
+                    if today_maybe_win_slot_1 > 25:
+                        your_row.append(random.choice(emoji_list))
+                    else:
+                        emoji_to_append = (random.choice(emoji_list))
+                        while emoji_to_append in your_row:
+                            emoji_to_append = (random.choice(emoji_list))
+                        if emoji_to_append not in your_row:
+                            your_row.append(emoji_to_append)
+                else:
+                    emoji_to_append = (random.choice(emoji_list))
+                    while emoji_to_append in your_row:
+                        emoji_to_append = (random.choice(emoji_list))
+                    if emoji_to_append not in your_row:
+                        your_row.append(emoji_to_append)
+            if counter == 1:
+                your_row.append(random.choice(emoji_list))
+            counter += 1
         stater = f'Ставка: __**{amount}**__ {emoji} Выигрыш __**{int(0)}**__ {emoji}'
         if your_row[0] == your_row[1] and your_row[1] == your_row[2] and your_row[2] == your_row[0] and your_row[
             0] == orange_gem:
-            stater = f'Ставка: __**{amount}**__ {emoji} Выигрыш __**{int(amount * 6)}**__ {emoji}'
-            embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at,
-                                   description=stater)
-            embed.add_field(name=f'Слоты - {ctx.author}', value=f'⠀{first_row[0]} {first_row[1]} {first_row[2]}\n⠀|'
-                                                                f'{your_row[0]} {your_row[1]} {your_row[2]}'
-                                                                f'|\n⠀{third_row[0]} {third_row[1]} {third_row[2]}')
-            embed.set_footer(icon_url=ctx.author.avatar.url, text=f'Ваш баланс {int(balance + amount * 6)}')
-            sql = "UPDATE money SET money = ? WHERE user_id = ?"
-            val = (balance + int(amount * 6), ctx.author.id)
-            cursor.execute(sql, val)
-            db.commit()
-            cursor.close()
-            db.close()
-            return await ctx.send(embed=embed)
-        elif your_row[0] == your_row[1] and your_row[1] == your_row[2] and your_row[2] == your_row[0] and your_row[
-            0] == purple_gem:
             stater = f'Ставка: __**{amount}**__ {emoji} Выигрыш __**{int(amount * 4)}**__ {emoji}'
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at,
                                    description=stater)
-            embed.add_field(name=f'Слоты - {ctx.author}', value=f'⠀{first_row[0]} {first_row[1]} {first_row[2]}\n⠀|'
-                                                                f'{your_row[0]} {your_row[1]} {your_row[2]}'
-                                                                f'|\n⠀{third_row[0]} {third_row[1]} {third_row[2]}')
+            embed.add_field(name=f'Слоты - {ctx.author}', value=f'⠀{first_row[0]} {first_row[1]} {first_row[2]}\n'
+                                                                f'⠀{your_row[0]} {your_row[1]} {your_row[2]}'
+                                                                f'\n⠀{third_row[0]} {third_row[1]} {third_row[2]}')
             embed.set_footer(icon_url=ctx.author.avatar.url, text=f'Ваш баланс {int(balance + amount * 4)}')
             sql = "UPDATE money SET money = ? WHERE user_id = ?"
             val = (balance + int(amount * 4), ctx.author.id)
@@ -420,32 +437,47 @@ class Economics(commands.Cog):
             db.close()
             return await ctx.send(embed=embed)
         elif your_row[0] == your_row[1] and your_row[1] == your_row[2] and your_row[2] == your_row[0] and your_row[
-            0] != orange_gem and your_row[0] != purple_gem:
-            stater = f'Ставка: __**{amount}**__ {emoji} Выигрыш __**{int(amount * 2.5)}**__ {emoji}'
+            0] == purple_gem:
+            stater = f'Ставка: __**{amount}**__ {emoji} Выигрыш __**{int(amount * 3)}**__ {emoji}'
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at,
                                    description=stater)
-            embed.add_field(name=f'Слоты - {ctx.author}', value=f'⠀{first_row[0]} {first_row[1]} {first_row[2]}\n⠀|'
-                                                                f'{your_row[0]} {your_row[1]} {your_row[2]}'
-                                                                f'|\n⠀{third_row[0]} {third_row[1]} {third_row[2]}')
-            embed.set_footer(icon_url=ctx.author.avatar.url, text=f'Ваш баланс {int(balance + amount * 4)}')
+            embed.add_field(name=f'Слоты - {ctx.author}', value=f'⠀{first_row[0]} {first_row[1]} {first_row[2]}\n'
+                                                                f'⠀{your_row[0]} {your_row[1]} {your_row[2]}'
+                                                                f'\n⠀{third_row[0]} {third_row[1]} {third_row[2]}')
+            embed.set_footer(icon_url=ctx.author.avatar.url, text=f'Ваш баланс {int(balance + amount * 3)}')
             sql = "UPDATE money SET money = ? WHERE user_id = ?"
-            val = (balance + int(amount * 2.5), ctx.author.id)
+            val = (balance + int(amount * 3), ctx.author.id)
             cursor.execute(sql, val)
             db.commit()
             cursor.close()
             db.close()
             return await ctx.send(embed=embed)
-        elif your_row[0] == your_row[1] or your_row[0] == your_row[2] or \
-                your_row[2] == your_row[0] or your_row[1] == your_row[2]:
-            stater = f'Ставка: __**{amount}**__ {emoji} Выигрыш __**{int(amount * 1.5)}**__ {emoji}'
+        elif your_row[0] == your_row[1] and your_row[1] == your_row[2] and your_row[2] == your_row[0] and your_row[
+            0] != orange_gem and your_row[0] != purple_gem:
+            stater = f'Ставка: __**{amount}**__ {emoji} Выигрыш __**{int(amount * 2)}**__ {emoji}'
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at,
                                    description=stater)
-            embed.add_field(name=f'Слоты - {ctx.author}', value=f'⠀{first_row[0]} {first_row[1]} {first_row[2]}\n⠀|'
-                                                                f'{your_row[0]} {your_row[1]} {your_row[2]}'
-                                                                f'|\n⠀{third_row[0]} {third_row[1]} {third_row[2]}')
-            embed.set_footer(icon_url=ctx.author.avatar.url, text=f'Ваш баланс {int(balance + amount * 1.5)}')
+            embed.add_field(name=f'Слоты - {ctx.author}', value=f'⠀{first_row[0]} {first_row[1]} {first_row[2]}\n'
+                                                                f'⠀{your_row[0]} {your_row[1]} {your_row[2]}'
+                                                                f'\n⠀{third_row[0]} {third_row[1]} {third_row[2]}')
+            embed.set_footer(icon_url=ctx.author.avatar.url, text=f'Ваш баланс {int(balance + amount * 2)}')
             sql = "UPDATE money SET money = ? WHERE user_id = ?"
-            val = (balance + int(amount * 1.5), ctx.author.id)
+            val = (balance + int(amount * 2), ctx.author.id)
+            cursor.execute(sql, val)
+            db.commit()
+            cursor.close()
+            db.close()
+            return await ctx.send(embed=embed)
+        elif your_row[0] == your_row[1] or your_row[1] == your_row[2] or your_row[0] == your_row[2]:
+            stater = f'Ставка: __**{amount}**__ {emoji} Выигрыш __**{int(amount * 1)}**__ {emoji}'
+            embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at,
+                                   description=stater)
+            embed.add_field(name=f'Слоты - {ctx.author}', value=f'⠀{first_row[0]} {first_row[1]} {first_row[2]}\n'
+                                                                f'⠀{your_row[0]} {your_row[1]} {your_row[2]}'
+                                                                f'\n⠀{third_row[0]} {third_row[1]} {third_row[2]}')
+            embed.set_footer(icon_url=ctx.author.avatar.url, text=f'Ваш баланс {int(balance + amount * 1)}')
+            sql = "UPDATE money SET money = ? WHERE user_id = ?"
+            val = (balance + int(amount * 1), ctx.author.id)
             cursor.execute(sql, val)
             db.commit()
             cursor.close()
@@ -453,9 +485,9 @@ class Economics(commands.Cog):
             return await ctx.send(embed=embed)
         embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at,
                                description=stater)
-        embed.add_field(name=f'Слоты - {ctx.author}', value=f'⠀{first_row[0]} {first_row[1]} {first_row[2]}\n⠀|'
-                                                            f'{your_row[0]} {your_row[1]} {your_row[2]}'
-                                                            f'|\n⠀{third_row[0]} {third_row[1]} {third_row[2]}')
+        embed.add_field(name=f'Слоты - {ctx.author}', value=f'⠀{first_row[0]} {first_row[1]} {first_row[2]}\n'
+                                                            f'⠀{your_row[0]} {your_row[1]} {your_row[2]}'
+                                                            f'\n⠀{third_row[0]} {third_row[1]} {third_row[2]}')
         embed.set_footer(icon_url=ctx.author.avatar.url, text=f'Ваш баланс {int(balance - amount)}')
         sql = "UPDATE money SET money = ? WHERE user_id = ?"
         val = (balance - amount, ctx.author.id)
@@ -628,14 +660,14 @@ class Economics(commands.Cog):
             embed.add_field(name='Ошибка', value=f'Возникла ошибка, может в магазине нет ролей или такой роли?')
             return await ctx.send(embed=embed)
         else:
-            if roles[number_of_role-1] in ctx.author.roles:
+            if roles[number_of_role - 1] in ctx.author.roles:
                 cursor.close()
                 db.close()
                 embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
                 embed.add_field(name='Ошибка', value=f'У вас уже есть эта роль, нельзя купить её снова!')
                 return await ctx.send(embed=embed)
 
-            elif cursor.execute(f"SELECT cost FROM shop WHERE role_id = {roles[number_of_role-1].id}").fetchone()[0] > \
+            elif cursor.execute(f"SELECT cost FROM shop WHERE role_id = {roles[number_of_role - 1].id}").fetchone()[0] > \
                     cursor.execute(f"SELECT money FROM money WHERE user_id = {ctx.author.id}").fetchone()[0]:
                 cursor.close()
                 db.close()
@@ -643,8 +675,9 @@ class Economics(commands.Cog):
                 embed.add_field(name='Ошибка', value=f'У вас недостаточно {emoji} для покупки')
                 return await ctx.send(embed=embed)
             else:
-                cost = cursor.execute(f"SELECT cost FROM shop WHERE role_id = {roles[number_of_role-1].id}").fetchone()[0]
-                await ctx.author.add_roles(roles[number_of_role-1])
+                cost = \
+                cursor.execute(f"SELECT cost FROM shop WHERE role_id = {roles[number_of_role - 1].id}").fetchone()[0]
+                await ctx.author.add_roles(roles[number_of_role - 1])
                 cursor.execute(f"SELECT money FROM money WHERE user_id = {ctx.author.id}")
                 balance = cursor.fetchone()
                 try:
@@ -659,8 +692,8 @@ class Economics(commands.Cog):
                 cursor.close()
                 db.close()
                 embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
-                embed.add_field(name='Магазин', value=f'Роль {roles[number_of_role-1].mention} была куплена.')
-                embed.set_footer(text=f"остаточный баланс после операции: {balance-cost}", icon_url=ctx.guild.icon)
+                embed.add_field(name='Магазин', value=f'Роль {roles[number_of_role - 1].mention} была куплена.')
+                embed.set_footer(text=f"остаточный баланс после операции: {balance - cost}", icon_url=ctx.guild.icon)
                 await ctx.send(embed=embed)
 
 
