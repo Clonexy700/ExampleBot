@@ -1,4 +1,7 @@
+from typing import Optional
 import nextcord
+from nextcord import Interaction, SlashOption, Permissions
+from nextcord.ui import Button, View
 from nextcord.ext import commands
 from nextcord.utils import get
 import random
@@ -6,6 +9,13 @@ import datetime
 from random import shuffle
 import sqlite3
 from config import settings
+from core.games.blackjack import Hand, Deck, check_for_blackjack, show_blackjack_results, player_is_over, \
+    cards_emoji_representation, create_deck, deal_starting_cards, create_blackjack_embed, create_final_view, \
+    maybe_blackjack_cards, create_game_start_blackjack_embed
+from core.money.updaters import update_user_balance
+from core.money.getters import get_user_balance
+from core.ui.buttons import create_button, ViewAuthorCheck
+import asyncio
 
 
 class Economics(commands.Cog):
@@ -94,12 +104,12 @@ class Economics(commands.Cog):
 
         embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at,
                                description=f'Вы получили __**150**__ {emoji}')
-        embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
+        embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar)
         embed.set_thumbnail(
-            url='https://cdn.discordapp.com/attachments/996084073569194084/996084305031872574/white_clock.png')
-        embed.set_footer(
-            text=f"Команду можно использовать раз в 4 часа\n{random.choice(settings['footers'])}\nВНИМАНИЕ СЕЙЧАС ЗАПУЩЕНА ВЕРСИЯ БОТА ДЛЯ РАЗРАБОТКИ ВАШИ ДАННЫЕ НЕ БУДУТ СОХРАНЕНЫ",
-            icon_url=ctx.guild.icon.url)
+            url='https://cdn.discordapp.com/attachments/996084073569194084/996165596397981706/Picsart_22-07-12_00-25-50-038.png')
+        embed.set_footer(text=f"Команду можно использовать раз в 4 часа\n{random.choice(settings['footers'])}",
+                         icon_url=ctx.guild.icon.url)
+
         await ctx.send(embed=embed)
 
     @__daily.error
@@ -114,7 +124,7 @@ class Economics(commands.Cog):
 
     @commands.command(aliases=['bal', 'бал', 'баланс', 'money', 'balance', '$', 'wallet', 'мани', 'b', 'б'])
     async def __balance(self, ctx, user: nextcord.Member = None):
-        emoji = self.client.get_emoji(settings['emoji_id'])
+        emoji = "<a:emoji_1:995590858734841938>"
         user = ctx.author if not user else user
 
         if user.bot:
@@ -137,12 +147,9 @@ class Economics(commands.Cog):
             return await ctx.send('что-то с бд!!!')
 
         embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at,
-                               description=f"У вас на счету `{balance}` {emoji}")
-        embed.set_author(name=f"Баланс пользователя: {user.name}", icon_url=user.avatar.url)
-        embed.set_footer(
-            text=f"{random.choice(settings['footers'])}\nВНИМАНИЕ СЕЙЧАС ЗАПУЩЕНА ВЕРСИЯ БОТА ДЛЯ РАЗРАБОТКИ ВАШИ ДАННЫЕ НЕ БУДУТ СОХРАНЕНЫ",
-            icon_url=ctx.guild.icon)
-        embed.set_thumbnail(url='https://cdn-icons-png.flaticon.com/512/6871/6871577.png')
+                               description=f"У вас на счету __**{balance}**__ {emoji}")
+        embed.set_author(name=f"Баланс пользователя: {user.name}", icon_url=user.display_avatar)
+        embed.set_footer(text=random.choice(settings['footers']), icon_url=ctx.guild.icon)
 
         await ctx.send(embed=embed)
 
@@ -151,7 +158,7 @@ class Economics(commands.Cog):
 
     @commands.command(aliases=['give', 'transfer', 'дать', 'на', 'moneysend', 'sendmoney', 'send'])
     async def __transfer(self, ctx, user: nextcord.Member = None, amount: int = 0):
-        emoji = self.client.get_emoji(settings['emoji_id'])
+        emoji = "<a:emoji_1:995590858734841938>"
         if user is None:
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
             embed.add_field(name='Ошибка', value=f'Правильное написание команды: '
@@ -207,7 +214,7 @@ class Economics(commands.Cog):
                                description=f'Были отправлены __**{amount}**__ {emoji} на баланс {user.mention}')
         embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
         embed.set_thumbnail(url=user.avatar.url)
-        embed.set_footer(text=f'транзакция №{random.randint(1, 1000000000)}', icon_url=ctx.guild.avatar.url)
+        embed.set_footer(text=f'транзакция №{random.randint(1, 1000000000)}', icon_url=ctx.guild.icon.url)
 
         await ctx.send(embed=embed)
 
@@ -217,7 +224,7 @@ class Economics(commands.Cog):
     @commands.cooldown(1, 6, commands.BucketType.guild)
     @commands.command(aliases=['mleaderboard', 'mld', 'topmoney', 'mtop', 'topm', 'мтоп'])
     async def __money_leaderboard(self, ctx):
-        emoji = self.client.get_emoji(settings['emoji_id'])
+        emoji = "<a:emoji_1:995590858734841938>"
         async with ctx.channel.typing():
             counter = 0
             db = sqlite3.connect("./databases/main.sqlite")
@@ -225,16 +232,25 @@ class Economics(commands.Cog):
             users = []
             for row in cursor.execute("SELECT user_id, money FROM money ORDER BY money DESC LIMIT 15"):
                 counter += 1
-                user = await self.client.fetch_user(row[0])
-                users.append(f'`#{counter}`. {user.mention}, `Баланс: {row[1]}` {emoji}\n')
+                try:
+                    user = get(ctx.guild.members, id=row[0])
+                except:
+                    pass
+                try:
+                    users.append(f'**{counter}**. {user.mention}\n__**Баланс**__: `{row[1]}` {emoji}\n')
+                except:
+                    pass
             description = ' '.join([user for user in users])
             embed = nextcord.Embed(title='Топ 15 сервера по валюте', color=settings['defaultBotColor'],
                                    timestamp=ctx.message.created_at, description=description)
+            embed.set_footer(text=f"{ctx.guild.name}", icon_url=ctx.guild.icon.url)
 
+            cursor.close()
+            db.close()
             await ctx.send(embed=embed)
 
     @__money_leaderboard.error
-    async def level_leaderboard_cooldown_error(self, ctx, error):
+    async def money_leaderboard_cooldown_error(self, ctx, error):
         if isinstance(error, commands.CommandOnCooldown):
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
             embed.add_field(name='Ошибка', value='Команда сейчас недоступна, '
@@ -244,9 +260,8 @@ class Economics(commands.Cog):
 
     @commands.has_permissions(administrator=True)
     @commands.command(aliases=['take', 'забрать'])
-    async def __take(self, ctx, user: nextcord.Member = None, amount: int = None):
-        emoji = self.client.get_emoji(settings['emoji_id'])
-        emoji = self.client.get_emoji(settings['emoji_id'])
+    async def ___withdraw(self, ctx, user: nextcord.Member = None, amount: int = None):
+        emoji = "<a:emoji_1:995590858734841938>"
         if user is None:
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
             embed.add_field(name='Ошибка', value=f'Правильное написание команды: '
@@ -334,6 +349,7 @@ class Economics(commands.Cog):
         cursor.close()
         db.close()
 
+    @commands.cooldown(1, 5, commands.BucketType.user)
     @commands.command(aliases=['slots', 'slot', 'casino', 'слоты', 'казино'])
     async def __slots(self, ctx, amount: int = None):
         emoji = "<a:emoji_1:995590858734841938>"
@@ -392,7 +408,7 @@ class Economics(commands.Cog):
             first_row.append(random.choice(emoji_list))
             third_row.append(random.choice(emoji_list))
             if counter == 3:
-                if today_maybe_win_slot_2 > 25:
+                if today_maybe_win_slot_2 > 20:
                     your_row.append(random.choice(emoji_list))
                 else:
                     emoji_to_append = (random.choice(emoji_list))
@@ -402,7 +418,7 @@ class Economics(commands.Cog):
                         your_row.append(emoji_to_append)
             if counter == 2:
                 if today_we_try_to_roll_second > 100:
-                    if today_maybe_win_slot_1 > 25:
+                    if today_maybe_win_slot_1 > 20:
                         your_row.append(random.choice(emoji_list))
                     else:
                         emoji_to_append = (random.choice(emoji_list))
@@ -497,9 +513,18 @@ class Economics(commands.Cog):
         db.close()
         return await ctx.send(embed=embed)
 
+    @__slots.error
+    async def __slots_error(self, ctx, error):
+        if isinstance(error, commands.CommandOnCooldown):
+            embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+            embed.add_field(name='Ошибка', value='Команда сейчас недоступна, '
+                                                 'попробуйте позже, через %.2fs секунд' % error.retry_after)
+            await ctx.send(embed=embed)
+        raise error
+
+    @commands.cooldown(1, 7, commands.BucketType.user)
     @commands.command(aliases=['gamble', 'гамбл'])
     async def __gamble(self, ctx, amount: int = None):
-        await ctx.send('ВНИМАНИЕ СЕЙЧАС ЗАПУЩЕНА ВЕРСИЯ БОТА ДЛЯ РАЗРАБОТКИ ВАШИ ДАННЫЕ НЕ БУДУТ СОХРАНЕНЫ')
         emoji = "<a:emoji_1:995590858734841938>"
         if amount is None:
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
@@ -546,14 +571,14 @@ class Economics(commands.Cog):
                                    description=f"Ты выиграл `{amount_won}` {emoji}\n Проценты: `{percentage}`\nВаш баланс: `{balance + amount_won}` {emoji}")
             embed.set_author(name=f"{ctx.author.name}", icon_url=ctx.author.avatar.url)
         elif user_strikes < bot_strikes:
-            percentage = random.randint(0, 80)
+            percentage = random.randint(0, 95)
             amount_lost = int(amount * (percentage / 100))
             cursor.execute("UPDATE money SET money = ? WHERE user_id = ?",
                            (balance - amount_lost, ctx.author.id))
 
             db.commit()
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at,
-                                   description=f"Ты проиграл `{amount_lost}` {emoji}\n `{percentage}`\nВаш баланс: `{balance - amount_lost}` {emoji}")
+                                   description=f"Ты проиграл `{amount_lost}` {emoji}\n Проценты: `{percentage}`\nВаш баланс: `{balance - amount_lost}` {emoji}")
             embed.set_author(name=f"{ctx.author.name}", icon_url=ctx.author.avatar.url)
         else:
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at,
@@ -565,6 +590,16 @@ class Economics(commands.Cog):
         cursor.close()
         db.close()
 
+    @__gamble.error
+    async def gamble_error(self, ctx, error):
+        if isinstance(error, commands.CommandOnCooldown):
+            embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
+            embed.add_field(name='Ошибка', value='Команда сейчас недоступна, '
+                                                 'попробуйте позже, через %.2fs секунд' % error.retry_after)
+            await ctx.send(embed=embed)
+        raise error
+
+    @commands.has_permissions(administrator=True)
     @commands.command(aliases=['add-shop', 'добавить', 'add'])
     async def __add_shop(self, ctx, role: nextcord.Role = None, cost: int = None):
         if role is None:
@@ -596,6 +631,7 @@ class Economics(commands.Cog):
                 embed.set_footer(text=random.choice(settings['footers']), icon_url=ctx.guild.icon)
                 await ctx.send(embed=embed)
 
+    @commands.has_permissions(administrator=True)
     @commands.command(aliases=['remove-shop', 'убрать', 'remove'])
     async def __remove_shop(self, ctx, role: nextcord.Role = None):
         if role is None:
@@ -695,6 +731,141 @@ class Economics(commands.Cog):
                 embed.add_field(name='Магазин', value=f'Роль {roles[number_of_role - 1].mention} была куплена.')
                 embed.set_footer(text=f"остаточный баланс после операции: {balance - cost}", icon_url=ctx.guild.icon)
                 await ctx.send(embed=embed)
+
+
+    @nextcord.slash_command(name='blackjack',
+                            default_member_permissions=Permissions(send_messages=True))
+    async def __blackjack(self, interaction: Interaction, bet: Optional[int] = SlashOption(required=True)):
+        if bet <= 0:
+            return await interaction.response.send_message('negative_value_error')
+        balance = get_user_balance(interaction.user.id)
+        if balance < bet:
+            return await interaction.response.send_message('not_enough_money_error')
+        global player
+        player = interaction.user
+        await interaction.response.defer()
+        deck = create_deck()
+        player_hand = Hand()
+        dealer_hand = Hand(dealer=True)
+        deal_starting_cards(player_hand, dealer_hand, deck)
+        global turn
+        turn = 1
+
+        async def hit_callback(interaction: Interaction):
+            global turn
+            turn += 1
+            player_hand.add_card(deck.deal())
+            if player_is_over(player_hand):
+                update_user_balance(interaction.user.id, -bet)
+                balance = get_user_balance(interaction.user.id)
+                msg = "Ваш баланс"
+                embed = create_blackjack_embed(self.client, "**Дилер** победил", player_hand, dealer_hand,
+                                               f'{msg} {balance}', interaction.user.display_avatar)
+                view = create_final_view()
+                await interaction.message.edit(embed=embed, view=view)
+            else:
+                embed = create_game_start_blackjack_embed(self.client, f"ход {turn}", player_hand, dealer_hand)
+                await interaction.message.edit(embed=embed)
+
+        async def stand_callback(interaction: Interaction):
+            global turn
+            turn += 1
+            while dealer_hand.get_value() < 17:
+                dealer_hand.add_card(deck.deal())
+                if player_is_over(dealer_hand):
+                    update_user_balance(interaction.user.id, bet)
+                    balance = get_user_balance(interaction.user.id)
+                    msg = "Ваш баланс"
+                    embed = create_blackjack_embed(self.client, f"**{interaction.user.mention}** победил",
+                                                   player_hand, dealer_hand,
+                                                   f'{msg} {balance}', interaction.user.display_avatar)
+                    view = create_final_view()
+                    await interaction.message.edit(embed=embed, view=view)
+            if 17 <= dealer_hand.get_value() <= 21:
+                if dealer_hand.get_value() > player_hand.get_value():
+                    update_user_balance(interaction.user.id, -bet)
+                    balance = get_user_balance(interaction.user.id)
+                    msg = "Ваш баланс"
+                    embed = create_blackjack_embed(self.client, "**Дилер** победил", player_hand, dealer_hand,
+                                                   f'{msg} {balance}', interaction.user.display_avatar)
+                    view = create_final_view()
+                    await interaction.message.edit(embed=embed, view=view)
+                elif dealer_hand.get_value() == player_hand.get_value():
+                    embed = create_blackjack_embed(self.client, "**Ничья**", player_hand, dealer_hand)
+                    view = create_final_view()
+                    await interaction.message.edit(embed=embed, view=view)
+                else:
+                    update_user_balance(interaction.user.id, bet)
+                    balance = get_user_balance(interaction.user.id)
+                    msg = "Ваш баланс"
+                    embed = create_blackjack_embed(self.client, f"**{interaction.user.mention}** победил",
+                                                   player_hand, dealer_hand,
+                                                   f'{msg} {balance}', interaction.user.display_avatar)
+                    view = create_final_view()
+                    await interaction.message.edit(embed=embed, view=view)
+
+        async def dealer_blackjack_callback(interaction: Interaction):
+            if check_for_blackjack(dealer_hand):
+                embed = create_blackjack_embed(self.client, "**Ничья**", player_hand, dealer_hand)
+                view = create_final_view()
+                await interaction.message.edit(embed=embed, view=view)
+            else:
+                update_user_balance(interaction.user.id, int(bet * 1.5))
+                balance = get_user_balance(interaction.user.id)
+                msg = "Ваш баланс"
+                embed = create_blackjack_embed(self.client, f"**{interaction.user.mention}** победил",
+                                               player_hand, dealer_hand,
+                                               f'{msg} {balance}', interaction.user.display_avatar)
+                view = create_final_view()
+                await interaction.message.edit(embed=embed, view=view)
+
+        async def one_to_one_callback(interaction: Interaction):
+            update_user_balance(interaction.user.id, bet)
+            balance = get_user_balance(interaction.user.id)
+            msg = "Ваш баланс"
+            embed = create_blackjack_embed(self.client, f"**{interaction.user.mention}** берёт 1:1",
+                                           player_hand, dealer_hand,
+                                           f'{msg} {balance}', interaction.user.display_avatar)
+            view = create_final_view()
+            await interaction.message.edit(embed=embed, view=view)
+
+        if check_for_blackjack(player_hand):
+            if str(dealer_hand.cards[1]) in maybe_blackjack_cards:
+                dealer_blackjack = create_button("Проверка блекджека", dealer_blackjack_callback, False)
+                one_to_one = create_button("взять 1:1", one_to_one_callback, False)
+                view = ViewAuthorCheck(interaction.user)
+                view.add_item(dealer_blackjack)
+                view.add_item(one_to_one)
+
+                embed = create_game_start_blackjack_embed(self.client, f"ход {turn}", player_hand, dealer_hand)
+                await interaction.followup.send(embed=embed, view=view)
+            else:
+                update_user_balance(interaction.user.id, int(bet * 1.5))
+                balance = get_user_balance(interaction.user.id)
+                msg = "Ваш баланс"
+                embed = create_blackjack_embed(self.client, f"**{interaction.user.mention}** победил",
+                                               player_hand, dealer_hand,
+                                               f'{msg} {balance}', interaction.user.display_avatar)
+                view = create_final_view()
+                await interaction.followup.send(embed=embed, view=view)
+        else:
+            if check_for_blackjack(dealer_hand):
+                update_user_balance(interaction.user.id, -bet)
+                balance = get_user_balance(interaction.user.id)
+                msg = "Ваш баланс"
+                embed = create_blackjack_embed(self.client, "**Dealer** победил", player_hand, dealer_hand,
+                                               f'{msg} {balance}', interaction.user.display_avatar)
+                view = create_final_view()
+                await interaction.followup.send(embed=embed, view=view)
+            else:
+                hit = create_button("Ещё", hit_callback, False)
+                stand = create_button("Хватит", stand_callback, False)
+                view = ViewAuthorCheck(interaction.user)
+                view.add_item(hit)
+                view.add_item(stand)
+
+                embed = create_game_start_blackjack_embed(self.client, f"ход {turn}", player_hand, dealer_hand)
+                await interaction.followup.send(embed=embed, view=view)
 
 
 def setup(client):
