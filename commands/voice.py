@@ -11,6 +11,14 @@ import locale
 from config import settings
 
 
+def format_seconds_to_hhmmss(seconds):
+    hours = seconds // (60 * 60)
+    seconds %= (60 * 60)
+    minutes = seconds // 60
+    seconds %= 60
+    return "%02i:%02i:%02i" % (hours, minutes, seconds)
+
+
 class VoiceHandler(commands.Cog):
     def __init__(self, client):
         self.client = client
@@ -48,44 +56,29 @@ class VoiceHandler(commands.Cog):
         new_user = member.id
         query = cursor.execute(f"SELECT join_time FROM voice WHERE user_id = {member.id}").fetchone()[0]
         if query != '0':
-            if before.voice.voice_channel is not None and after.voice.voice_channel is None:
+            if before.channel is not None and after.channel is None:
 
                 voice_leave_time = datetime.datetime.now().time().strftime('%H:%M:%S')
                 voice_join_time = query
 
-                calculate_time = (
-                        datetime.datetime.strptime(voice_leave_time, '%H:%M:%S') - datetime.datetime.strptime(
-                    voice_join_time, '%H:%M:%S'))
+                calculate_time = abs(
+                    datetime.datetime.strptime(voice_leave_time, '%H:%M:%S') - datetime.datetime.strptime(
+                        voice_join_time, '%H:%M:%S'))
 
-                minutes_in_voice = int(
-                    calculate_time.total_seconds() / 60)  # считаем минуты в войсе чтобы начислить валюту и опыт
+                minutes_in_voice = abs(int(
+                    calculate_time.total_seconds() / 60))  # считаем минуты в войсе чтобы начислить валюту и опыт
 
-                second_in_voice = calculate_time.total_seconds()
+                second_in_voice = abs(calculate_time.total_seconds())
 
                 timing = cursor.execute(f"SELECT time FROM voice WHERE user_id = {member.id}").fetchone()[0]
 
-                def parseTimeDelta(s):
-                    d = re.match(
-                        r'((?P<days>\d+) days, )?(?P<hours>\d+):'
-                        r'(?P<minutes>\d+):(?P<seconds>\d+)',
-                        str(s)).groupdict(0)
-                    return timedelta(**dict(((key, int(value))
-                                             for key, value in d.items())))
-
-                def get_duration(duration):
-                    hours = int(duration / 3600)
-                    minutes = int(duration % 3600 / 60)
-                    seconds = int((duration % 3600) % 60)
-                    return '{:02d}:{:02d}:{:02d}'.format(hours, minutes, seconds)
-
                 if timing == '0':
-                    time_for_bd = get_duration(second_in_voice)
+                    add_time = second_in_voice
                 else:
-                    add_time = (parseTimeDelta(timing) + timedelta(seconds=second_in_voice))
-                    duration = add_time.total_seconds()
-                    time_for_bd = (get_duration(duration))
+                    add_time = float(timing) + second_in_voice
                 sql = "UPDATE voice SET time = ? WHERE user_id = ?"
-                val = (str(time_for_bd), new_user)
+                print(format_seconds_to_hhmmss(float(add_time)))
+                val = (str(add_time), new_user)
                 cursor.execute(sql, val)
                 db.commit()
 
@@ -138,7 +131,7 @@ class VoiceHandler(commands.Cog):
                 db.close()
 
         else:
-            if before.voice.voice_channel is None and after.voice.voice_channel is not None:
+            if before.channel is None and after.channel is not None:
                 new_voice_join_time = datetime.datetime.now().time().strftime('%H:%M:%S')
                 sql = "UPDATE voice SET join_time = ? WHERE user_id = ?"
                 val = (new_voice_join_time, new_user)
@@ -167,6 +160,7 @@ class VoiceHandler(commands.Cog):
         db = sqlite3.connect("./databases/main.sqlite")
         cursor = db.cursor()
         user_time = cursor.execute(f"SELECT time FROM voice WHERE user_id = {user.id}").fetchone()[0]
+        user_time = format_seconds_to_hhmmss(float(user_time))
         embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
         embed.set_author(name=user.name, icon_url=user.avatar)
         voice_members = set()
@@ -195,10 +189,10 @@ class VoiceHandler(commands.Cog):
             db = sqlite3.connect("./databases/main.sqlite")
             cursor = db.cursor()
             users = []
-            for row in cursor.execute("SELECT user_id, time FROM voice ORDER BY time DESC LIMIT 15"):
+            for row in cursor.execute("SELECT user_id, time FROM voice ORDER BY strftime('%s', time) ASC LIMIT 15"):
                 counter += 1
                 user = await self.client.fetch_user(row[0])
-                users.append(f'`#{counter}`. {user.mention}, `Время: {row[1]}\n`')
+                users.append(f'`#{counter}`. {user.mention}, `Время: {format_seconds_to_hhmmss(float(row[1]))}\n`')
             description = ' '.join([user for user in users])
             embed = nextcord.Embed(title='Топ 15 сервера по времени в голосовых каналах',
                                    color=settings['defaultBotColor'],
