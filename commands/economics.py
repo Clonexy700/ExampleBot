@@ -805,7 +805,7 @@ class Economics(commands.Cog):
             role = ctx.guild.get_role(row[0])
             if role is not None:
                 counter += 1
-                roles.append(f'**{counter}**. {role.mention}\nСтоимость: __**{row[1]}**__ {emoji}\n')
+                roles.append(f'**{counter}**. {role.mention}\nСтоимость: **{row[1]}** {emoji}\n')
         description = ' '.join([role for role in roles])
         if len(roles) == 0:
             description = 'Тут ничего нет...'
@@ -816,6 +816,9 @@ class Economics(commands.Cog):
 
     @commands.command(aliases=['buy', 'buy-role', 'купить'])
     async def __buy(self, ctx, number_of_role: int):
+        if ctx.guild.id == 985199058509496330:
+          if ctx.channel.id != 985217527447683132:
+            return
         emoji = "<a:emoji_1:995590858734841938>"
         db = sqlite3.connect("./databases/main.sqlite")
         cursor = db.cursor()
@@ -853,8 +856,7 @@ class Economics(commands.Cog):
                 return await ctx.send(embed=embed)
             else:
                 cost = \
-                    cursor.execute(f"SELECT cost FROM shop WHERE role_id = {roles[number_of_role - 1].id}").fetchone()[
-                        0]
+                cursor.execute(f"SELECT cost FROM shop WHERE role_id = {roles[number_of_role - 1].id}").fetchone()[0]
                 await ctx.author.add_roles(roles[number_of_role - 1])
                 cursor.execute(f"SELECT money FROM money WHERE user_id = {ctx.author.id}")
                 balance = cursor.fetchone()
