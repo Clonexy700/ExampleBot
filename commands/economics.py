@@ -437,44 +437,39 @@ class Economics(commands.Cog):
         print(free_spin)
         shuffle(emoji_list)
         for i in range(3):
-            if ctx.author.id != 314618320093577217:
-                first_row.append(random.choice(emoji_list))
-                third_row.append(random.choice(emoji_list))
-                if i == 0:
+            first_row.append(random.choice(emoji_list))
+            third_row.append(random.choice(emoji_list))
+            if i == 0:
+                your_row.append(random.choice(player_will_choose_from))
+            if i == 1:
+                if today_maybe_win_slot_1 < 0.35:
                     your_row.append(random.choice(player_will_choose_from))
-                if i == 1:
-                    if today_maybe_win_slot_1 < 0.35:
+                else:
+                    emoji_choose = random.choice(player_will_choose_from)
+                    while emoji_choose in your_row:
+                        emoji_choose = random.choice(player_will_choose_from)
+                    your_row.append(emoji_choose)
+            if i == 2:
+                if today_we_try_to_roll_second < 0.9:
+                    if today_maybe_win_slot_2 < 0.25:
                         your_row.append(random.choice(player_will_choose_from))
                     else:
                         emoji_choose = random.choice(player_will_choose_from)
                         while emoji_choose in your_row:
                             emoji_choose = random.choice(player_will_choose_from)
                         your_row.append(emoji_choose)
-                if i == 2:
-                    if today_we_try_to_roll_second < 0.9:
-                        if today_maybe_win_slot_2 < 0.25:
-                            your_row.append(random.choice(player_will_choose_from))
-                        else:
-                            emoji_choose = random.choice(player_will_choose_from)
-                            while emoji_choose in your_row:
-                                emoji_choose = random.choice(player_will_choose_from)
-                            your_row.append(emoji_choose)
-                    else:
+                else:
+                    emoji_choose = random.choice(player_will_choose_from)
+                    while emoji_choose in your_row:
                         emoji_choose = random.choice(player_will_choose_from)
-                        while emoji_choose in your_row:
-                            emoji_choose = random.choice(player_will_choose_from)
-                        your_row.append(emoji_choose)
-            else:
-                first_row.append(orange_gem)
-                third_row.append(orange_gem)
-                your_row.append(random.choice(player_will_choose_from))
+                    your_row.append(emoji_choose)
         board = [your_row[0], your_row[1], your_row[2],
                  first_row[0], first_row[1], first_row[2],
                  third_row[0], third_row[1], third_row[2]]
         stater = f'Ставка: **{amount}** {emoji} Выигрыш **{amount_win}** {emoji}'
         if your_row[0] == your_row[1] and your_row[1] == your_row[2] and your_row[2] == your_row[0] and your_row[
             0] == orange_gem:
-            amount_win += int(amount*4)
+            amount_win += int(amount * 4)
             stater = f'Ставка: **{amount}** {emoji} Выигрыш **{amount_win}** {emoji}'
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at,
                                    description=stater)
@@ -484,7 +479,7 @@ class Economics(commands.Cog):
             embed.set_footer(icon_url=ctx.author.avatar.url, text=f'Ваш баланс {int(balance + amount * 4)}')
         elif your_row[0] == your_row[1] and your_row[1] == your_row[2] and your_row[2] == your_row[0] and your_row[
             0] == purple_gem:
-            amount_win += int(amount*3)
+            amount_win += int(amount * 3)
             stater = f'Ставка: **{amount}** {emoji} Выигрыш **{amount_win}** {emoji}'
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at,
                                    description=stater)
@@ -494,7 +489,7 @@ class Economics(commands.Cog):
             embed.set_footer(icon_url=ctx.author.avatar.url, text=f'Ваш баланс {int(balance + amount * 3)}')
         elif your_row[0] == your_row[1] and your_row[1] == your_row[2] and your_row[2] == your_row[0] and your_row[
             0] != orange_gem and your_row[0] != purple_gem:
-            amount_win += int(amount*2)
+            amount_win += int(amount * 2)
             stater = f'Ставка: **{amount}** {emoji} Выигрыш **{amount_win}** {emoji}'
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at,
                                    description=stater)
@@ -503,7 +498,7 @@ class Economics(commands.Cog):
                                                                 f'\n⠀{third_row[0]} {third_row[1]} {third_row[2]}')
             embed.set_footer(icon_url=ctx.author.avatar.url, text=f'Ваш баланс {int(balance + amount * 2)}')
         elif your_row[0] == your_row[1] or your_row[1] == your_row[2] or your_row[0] == your_row[2]:
-            amount_win += int(amount*1)
+            amount_win += int(amount * 1)
             stater = f'Ставка: **{amount}** {emoji} Выигрыш **{amount_win}** {emoji}'
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at,
                                    description=stater)
@@ -523,9 +518,10 @@ class Economics(commands.Cog):
         if times >= 7:
             jackpot = True
         if free_spin < 0.25:
-            embed.add_field(name='Бесплатные прокрутки барабана', value=f'Барабан будет крутиться столько раз, сколько на поле максимально выпало кристаллов.'
-                                                                        f', так как на поле больше всего {gem}, то количество бесплатных прокруток барабана: **{times}**'
-                                                                        f' Поражения отображаться не будут')
+            embed.add_field(name='Бесплатные прокрутки барабана',
+                            value=f'Барабан будет крутиться столько раз, сколько на поле максимально выпало кристаллов.'
+                                  f', так как на поле больше всего {gem}, то количество бесплатных прокруток барабана: **{times}**'
+                                  f' Поражения отображаться не будут')
             free_spin_state = True
         if free_spin_state is True:
             for j in range(times):
@@ -581,7 +577,7 @@ class Economics(commands.Cog):
                             0] == orange_gem:
                     amount_win += int(amount * 4)
                     stater = f'Ставка: **{amount}** {emoji} Выигрыш **{amount_win}** {emoji}'
-                    embed.add_field(name=f'Бесплатная прокрутка {j+1} - {ctx.author}',
+                    embed.add_field(name=f'Бесплатная прокрутка {j + 1} - {ctx.author}',
                                     value=f'⠀{first_row[0]} {first_row[1]} {first_row[2]}\n'
                                           f'⠀{your_row[0]} {your_row[1]} {your_row[2]}'
                                           f'\n⠀{third_row[0]} {third_row[1]} {third_row[2]}')
@@ -590,7 +586,7 @@ class Economics(commands.Cog):
                             0] == purple_gem:
                     amount_win += int(amount * 3)
                     stater = f'Ставка: **{amount}** {emoji} Выигрыш **{amount_win}** {emoji}'
-                    embed.add_field(name=f'Бесплатная прокрутка {j+1} - {ctx.author}',
+                    embed.add_field(name=f'Бесплатная прокрутка {j + 1} - {ctx.author}',
                                     value=f'⠀{first_row[0]} {first_row[1]} {first_row[2]}\n'
                                           f'⠀{your_row[0]} {your_row[1]} {your_row[2]}'
                                           f'\n⠀{third_row[0]} {third_row[1]} {third_row[2]}')
@@ -599,14 +595,14 @@ class Economics(commands.Cog):
                             0] != orange_gem and your_row[0] != purple_gem:
                     amount_win += int(amount * 2)
                     stater = f'Ставка: **{amount}** {emoji} Выигрыш **{amount_win}** {emoji}'
-                    embed.add_field(name=f'Бесплатная прокрутка {j+1} - {ctx.author}',
+                    embed.add_field(name=f'Бесплатная прокрутка {j + 1} - {ctx.author}',
                                     value=f'⠀{first_row[0]} {first_row[1]} {first_row[2]}\n'
                                           f'⠀{your_row[0]} {your_row[1]} {your_row[2]}'
                                           f'\n⠀{third_row[0]} {third_row[1]} {third_row[2]}')
                 elif your_row[0] == your_row[1] or your_row[1] == your_row[2] or your_row[0] == your_row[2]:
                     amount_win += int(amount * 1)
                     stater = f'Ставка: **{amount}** {emoji} Выигрыш **{amount_win}** {emoji}'
-                    embed.add_field(name=f'Бесплатная прокрутка {j+1} - {ctx.author}',
+                    embed.add_field(name=f'Бесплатная прокрутка {j + 1} - {ctx.author}',
                                     value=f'⠀{first_row[0]} {first_row[1]} {first_row[2]}\n'
                                           f'⠀{your_row[0]} {your_row[1]} {your_row[2]}'
                                           f'\n⠀{third_row[0]} {third_row[1]} {third_row[2]}')
@@ -625,7 +621,7 @@ class Economics(commands.Cog):
             jack_to_footer = jackpot_amount
             if amount_win == 0:
                 sql = "UPDATE jackpot SET amount = ? WHERE guild_id = ?"
-                val = (jackpot_amount+amount, ctx.guild.id)
+                val = (jackpot_amount + amount, ctx.guild.id)
                 cursor.execute(sql, val)
                 db.commit()
                 jack_to_footer = jackpot_amount + amount
