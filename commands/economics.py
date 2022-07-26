@@ -801,7 +801,7 @@ class Economics(commands.Cog):
         cursor = db.cursor()
 
         roles = []
-        for row in cursor.execute(f"SELECT role_id, cost FROM shop WHERE guild_id = {ctx.guild.id}"):
+        for row in cursor.execute(f"SELECT role_id, cost FROM shop WHERE guild_id = {ctx.guild.id} ORDER BY cost DESC"):
             role = ctx.guild.get_role(row[0])
             if role is not None:
                 counter += 1
@@ -824,7 +824,7 @@ class Economics(commands.Cog):
         cursor = db.cursor()
         roles = []
         try:
-            for row in cursor.execute(f"SELECT role_id, cost FROM shop WHERE guild_id = {ctx.guild.id}"):
+            for row in cursor.execute(f"SELECT role_id, cost FROM shop WHERE guild_id = {ctx.guild.id} ORDER BY cost DESC"):
                 role = ctx.guild.get_role(row[0])
                 roles.append(role)
         except:
