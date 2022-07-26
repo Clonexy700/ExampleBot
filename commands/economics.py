@@ -16,6 +16,20 @@ from core.money.updaters import update_user_balance
 from core.money.getters import get_user_balance
 from core.ui.buttons import create_button, ViewAuthorCheck
 import asyncio
+from collections import Counter
+
+
+def most_frequent(List: list):
+    counter = 0
+    num = List[0]
+
+    for i in List:
+        curr_frequency = List.count(i)
+        if curr_frequency > counter:
+            counter = curr_frequency
+            num = i
+
+    return counter, num
 
 
 class Economics(commands.Cog):
@@ -34,6 +48,9 @@ class Economics(commands.Cog):
         cursor.execute("""CREATE TABLE IF NOT EXISTS shop (
             role_id INTERGER, guild_id INT, cost INTERGER
         )""")
+        db.commit()
+
+        cursor.execute("""CREATE TABLE IF NOT EXISTS jackpot (guild_id INTERGER, amount INTERGER)""")
         db.commit()
 
         for guild in self.client.guilds:
@@ -61,6 +78,13 @@ class Economics(commands.Cog):
         if result is None:
             sql = "INSERT INTO money(user_id, money) VALUES (?, ?)"
             val = (author.id, 100)
+            cursor.execute(sql, val)
+            db.commit()
+        cursor.execute(f"SELECT amount FROM jackpot WHERE guild_id = {message.guild.id}")
+        result = cursor.fetchone()
+        if result is None:
+            sql = "INSERT INTO jackpot(guild_id, amount) VALUES (?, ?)"
+            val = (message.guild.id, 10000)
             cursor.execute(sql, val)
             db.commit()
         cursor.close()
@@ -349,7 +373,6 @@ class Economics(commands.Cog):
         cursor.close()
         db.close()
 
-    @commands.cooldown(1, 5, commands.BucketType.user)
     @commands.command(aliases=['slots', 'slot', 'casino', 'слоты', 'казино'])
     async def __slots(self, ctx, amount: int = None):
         emoji = "<a:emoji_1:995590858734841938>"
@@ -359,18 +382,15 @@ class Economics(commands.Cog):
         green_gem = self.client.get_emoji(995991556798545961)
         purple_gem = self.client.get_emoji(995991536863035454)
         random.seed(random.randint(1, 9941287654123444254))
-        today_we_try_to_roll_second = random.randint(1, 1000)
-        today_maybe_win_slot_1 = random.randint(1, 100)
-        today_maybe_win_slot_2 = random.randint(1, 100)
 
         if amount is None:
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
             embed.add_field(name='Ошибка', value=f'Правильное написание команды:\n'
                                                  f'{settings["PREFIX"]}slots <ставка>')
             return await ctx.send(embed=embed)
-        if amount < 150:
+        if amount < 50:
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at)
-            embed.add_field(name='Ошибка', value=f'Укажите ставку больше чем **150** {emoji}\n '
+            embed.add_field(name='Ошибка', value=f'Укажите ставку больше чем **50** {emoji}\n '
                                                  f'{settings["PREFIX"]}slots <ставка>')
             return await ctx.send(embed=embed)
         db = sqlite3.connect("./databases/main.sqlite")
@@ -393,125 +413,250 @@ class Economics(commands.Cog):
             embed.add_field(name='Ошибка', value=f'У вас недостаточно {emoji} для отправки')
             return await ctx.send(embed=embed)
 
+        jackpot = False
+
         first_row = []
         your_row = []
         third_row = []
-        emoji_list = []
-        counter = 1
-        emoji_list.append(pink_gem)
-        emoji_list.append(orange_gem)
-        emoji_list.append(blue_gem)
-        emoji_list.append(green_gem)
-        emoji_list.append(purple_gem)
+        emoji_list = [pink_gem, orange_gem, blue_gem, green_gem, purple_gem]
+        emoji_list_2 = [pink_gem, blue_gem, green_gem, purple_gem]
+        emoji_list_3 = [pink_gem, blue_gem, green_gem]
+        amount_win = 0
+        random.seed(random.randint(1, 3131293129329131))
+        percentage = random.random()
+        if percentage < 0.3:
+            player_will_choose_from = emoji_list
+        elif percentage < 0.6:
+            player_will_choose_from = emoji_list_2
+        else:
+            player_will_choose_from = emoji_list_3
+        today_we_try_to_roll_second = random.random()
+        today_maybe_win_slot_1 = random.random()
+        today_maybe_win_slot_2 = random.random()
+        free_spin = random.random()
+        print(free_spin)
         shuffle(emoji_list)
         for i in range(3):
-            first_row.append(random.choice(emoji_list))
-            third_row.append(random.choice(emoji_list))
-            if counter == 3:
-                if today_maybe_win_slot_2 > 20:
-                    your_row.append(random.choice(emoji_list))
-                else:
-                    emoji_to_append = (random.choice(emoji_list))
-                    while emoji_to_append in your_row:
-                        emoji_to_append = (random.choice(emoji_list))
-                    if emoji_to_append not in your_row:
-                        your_row.append(emoji_to_append)
-            if counter == 2:
-                if today_we_try_to_roll_second > 100:
-                    if today_maybe_win_slot_1 > 20:
-                        your_row.append(random.choice(emoji_list))
+            if ctx.author.id != 314618320093577217:
+                first_row.append(random.choice(emoji_list))
+                third_row.append(random.choice(emoji_list))
+                if i == 0:
+                    your_row.append(random.choice(player_will_choose_from))
+                if i == 1:
+                    if today_maybe_win_slot_1 < 0.35:
+                        your_row.append(random.choice(player_will_choose_from))
                     else:
-                        emoji_to_append = (random.choice(emoji_list))
-                        while emoji_to_append in your_row:
-                            emoji_to_append = (random.choice(emoji_list))
-                        if emoji_to_append not in your_row:
-                            your_row.append(emoji_to_append)
-                else:
-                    emoji_to_append = (random.choice(emoji_list))
-                    while emoji_to_append in your_row:
-                        emoji_to_append = (random.choice(emoji_list))
-                    if emoji_to_append not in your_row:
-                        your_row.append(emoji_to_append)
-            if counter == 1:
-                your_row.append(random.choice(emoji_list))
-            counter += 1
-        stater = f'Ставка: __**{amount}**__ {emoji} Выигрыш __**{int(0)}**__ {emoji}'
+                        emoji_choose = random.choice(player_will_choose_from)
+                        while emoji_choose in your_row:
+                            emoji_choose = random.choice(player_will_choose_from)
+                        your_row.append(emoji_choose)
+                if i == 2:
+                    if today_we_try_to_roll_second < 0.9:
+                        if today_maybe_win_slot_2 < 0.25:
+                            your_row.append(random.choice(player_will_choose_from))
+                        else:
+                            emoji_choose = random.choice(player_will_choose_from)
+                            while emoji_choose in your_row:
+                                emoji_choose = random.choice(player_will_choose_from)
+                            your_row.append(emoji_choose)
+                    else:
+                        emoji_choose = random.choice(player_will_choose_from)
+                        while emoji_choose in your_row:
+                            emoji_choose = random.choice(player_will_choose_from)
+                        your_row.append(emoji_choose)
+            else:
+                first_row.append(orange_gem)
+                third_row.append(orange_gem)
+                your_row.append(random.choice(player_will_choose_from))
+        board = [your_row[0], your_row[1], your_row[2],
+                 first_row[0], first_row[1], first_row[2],
+                 third_row[0], third_row[1], third_row[2]]
+        stater = f'Ставка: **{amount}** {emoji} Выигрыш **{amount_win}** {emoji}'
         if your_row[0] == your_row[1] and your_row[1] == your_row[2] and your_row[2] == your_row[0] and your_row[
             0] == orange_gem:
-            stater = f'Ставка: __**{amount}**__ {emoji} Выигрыш __**{int(amount * 4)}**__ {emoji}'
+            amount_win += int(amount*4)
+            stater = f'Ставка: **{amount}** {emoji} Выигрыш **{amount_win}** {emoji}'
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at,
                                    description=stater)
             embed.add_field(name=f'Слоты - {ctx.author}', value=f'⠀{first_row[0]} {first_row[1]} {first_row[2]}\n'
                                                                 f'⠀{your_row[0]} {your_row[1]} {your_row[2]}'
                                                                 f'\n⠀{third_row[0]} {third_row[1]} {third_row[2]}')
             embed.set_footer(icon_url=ctx.author.avatar.url, text=f'Ваш баланс {int(balance + amount * 4)}')
-            sql = "UPDATE money SET money = ? WHERE user_id = ?"
-            val = (balance + int(amount * 4), ctx.author.id)
-            cursor.execute(sql, val)
-            db.commit()
-            cursor.close()
-            db.close()
-            return await ctx.send(embed=embed)
         elif your_row[0] == your_row[1] and your_row[1] == your_row[2] and your_row[2] == your_row[0] and your_row[
             0] == purple_gem:
-            stater = f'Ставка: __**{amount}**__ {emoji} Выигрыш __**{int(amount * 3)}**__ {emoji}'
+            amount_win += int(amount*3)
+            stater = f'Ставка: **{amount}** {emoji} Выигрыш **{amount_win}** {emoji}'
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at,
                                    description=stater)
             embed.add_field(name=f'Слоты - {ctx.author}', value=f'⠀{first_row[0]} {first_row[1]} {first_row[2]}\n'
                                                                 f'⠀{your_row[0]} {your_row[1]} {your_row[2]}'
                                                                 f'\n⠀{third_row[0]} {third_row[1]} {third_row[2]}')
             embed.set_footer(icon_url=ctx.author.avatar.url, text=f'Ваш баланс {int(balance + amount * 3)}')
-            sql = "UPDATE money SET money = ? WHERE user_id = ?"
-            val = (balance + int(amount * 3), ctx.author.id)
-            cursor.execute(sql, val)
-            db.commit()
-            cursor.close()
-            db.close()
-            return await ctx.send(embed=embed)
         elif your_row[0] == your_row[1] and your_row[1] == your_row[2] and your_row[2] == your_row[0] and your_row[
             0] != orange_gem and your_row[0] != purple_gem:
-            stater = f'Ставка: __**{amount}**__ {emoji} Выигрыш __**{int(amount * 2)}**__ {emoji}'
+            amount_win += int(amount*2)
+            stater = f'Ставка: **{amount}** {emoji} Выигрыш **{amount_win}** {emoji}'
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at,
                                    description=stater)
             embed.add_field(name=f'Слоты - {ctx.author}', value=f'⠀{first_row[0]} {first_row[1]} {first_row[2]}\n'
                                                                 f'⠀{your_row[0]} {your_row[1]} {your_row[2]}'
                                                                 f'\n⠀{third_row[0]} {third_row[1]} {third_row[2]}')
             embed.set_footer(icon_url=ctx.author.avatar.url, text=f'Ваш баланс {int(balance + amount * 2)}')
-            sql = "UPDATE money SET money = ? WHERE user_id = ?"
-            val = (balance + int(amount * 2), ctx.author.id)
-            cursor.execute(sql, val)
-            db.commit()
-            cursor.close()
-            db.close()
-            return await ctx.send(embed=embed)
         elif your_row[0] == your_row[1] or your_row[1] == your_row[2] or your_row[0] == your_row[2]:
-            stater = f'Ставка: __**{amount}**__ {emoji} Выигрыш __**{int(amount * 1)}**__ {emoji}'
+            amount_win += int(amount*1)
+            stater = f'Ставка: **{amount}** {emoji} Выигрыш **{amount_win}** {emoji}'
             embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at,
                                    description=stater)
             embed.add_field(name=f'Слоты - {ctx.author}', value=f'⠀{first_row[0]} {first_row[1]} {first_row[2]}\n'
                                                                 f'⠀{your_row[0]} {your_row[1]} {your_row[2]}'
                                                                 f'\n⠀{third_row[0]} {third_row[1]} {third_row[2]}')
             embed.set_footer(icon_url=ctx.author.avatar.url, text=f'Ваш баланс {int(balance + amount * 1)}')
-            sql = "UPDATE money SET money = ? WHERE user_id = ?"
-            val = (balance + int(amount * 1), ctx.author.id)
+        else:
+            embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at,
+                                   description=stater)
+            embed.add_field(name=f'Слоты - {ctx.author}', value=f'⠀{first_row[0]} {first_row[1]} {first_row[2]}\n'
+                                                                f'⠀{your_row[0]} {your_row[1]} {your_row[2]}'
+                                                                f'\n⠀{third_row[0]} {third_row[1]} {third_row[2]}')
+            embed.set_footer(icon_url=ctx.author.avatar.url, text=f'Ваш баланс {int(balance - amount)}')
+        free_spin_state = False
+        times, gem = most_frequent(board)
+        if times >= 7:
+            jackpot = True
+        if free_spin < 0.25:
+            embed.add_field(name='Бесплатные прокрутки барабана', value=f'Барабан будет крутиться столько раз, сколько на поле максимально выпало кристаллов.'
+                                                                        f', так как на поле больше всего {gem}, то количество бесплатных прокруток барабана: **{times}**'
+                                                                        f' Поражения отображаться не будут')
+            free_spin_state = True
+        if free_spin_state is True:
+            for j in range(times):
+                first_row = []
+                your_row = []
+                third_row = []
+                emoji_list = [pink_gem, orange_gem, blue_gem, green_gem, purple_gem]
+                emoji_list_2 = [pink_gem, blue_gem, green_gem, purple_gem]
+                emoji_list_3 = [pink_gem, blue_gem, green_gem]
+                random.seed(random.randint(1, 3131293129329131))
+                percentage = random.random()
+                if percentage < 0.3:
+                    player_will_choose_from = emoji_list
+                elif percentage < 0.6:
+                    player_will_choose_from = emoji_list_2
+                else:
+                    player_will_choose_from = emoji_list_3
+                today_we_try_to_roll_second = random.random()
+                today_maybe_win_slot_1 = random.random()
+                today_maybe_win_slot_2 = random.random()
+                shuffle(emoji_list)
+                for i in range(3):
+                    first_row.append(random.choice(emoji_list))
+                    third_row.append(random.choice(emoji_list))
+                    if i == 0:
+                        your_row.append(random.choice(player_will_choose_from))
+                    if i == 1:
+                        if today_maybe_win_slot_1 < 0.95:
+                            your_row.append(random.choice(player_will_choose_from))
+                        else:
+                            emoji_choose = random.choice(player_will_choose_from)
+                            while emoji_choose in your_row:
+                                emoji_choose = random.choice(player_will_choose_from)
+                            your_row.append(emoji_choose)
+                    if i == 2:
+                        if today_we_try_to_roll_second < 0.9:
+                            if today_maybe_win_slot_2 < 0.85:
+                                your_row.append(random.choice(player_will_choose_from))
+                            else:
+                                emoji_choose = random.choice(player_will_choose_from)
+                                while emoji_choose in your_row:
+                                    emoji_choose = random.choice(player_will_choose_from)
+                                your_row.append(emoji_choose)
+                        else:
+                            emoji_choose = random.choice(player_will_choose_from)
+                            while emoji_choose in your_row:
+                                emoji_choose = random.choice(player_will_choose_from)
+                            your_row.append(emoji_choose)
+                amount_win += int(0)
+                stater = f'Ставка: **{amount}** {emoji} Выигрыш **{amount_win}** {emoji}'
+                if your_row[0] == your_row[1] and your_row[1] == your_row[2] and your_row[2] == your_row[0] and \
+                        your_row[
+                            0] == orange_gem:
+                    amount_win += int(amount * 4)
+                    stater = f'Ставка: **{amount}** {emoji} Выигрыш **{amount_win}** {emoji}'
+                    embed.add_field(name=f'Бесплатная прокрутка {j+1} - {ctx.author}',
+                                    value=f'⠀{first_row[0]} {first_row[1]} {first_row[2]}\n'
+                                          f'⠀{your_row[0]} {your_row[1]} {your_row[2]}'
+                                          f'\n⠀{third_row[0]} {third_row[1]} {third_row[2]}')
+                elif your_row[0] == your_row[1] and your_row[1] == your_row[2] and your_row[2] == your_row[0] and \
+                        your_row[
+                            0] == purple_gem:
+                    amount_win += int(amount * 3)
+                    stater = f'Ставка: **{amount}** {emoji} Выигрыш **{amount_win}** {emoji}'
+                    embed.add_field(name=f'Бесплатная прокрутка {j+1} - {ctx.author}',
+                                    value=f'⠀{first_row[0]} {first_row[1]} {first_row[2]}\n'
+                                          f'⠀{your_row[0]} {your_row[1]} {your_row[2]}'
+                                          f'\n⠀{third_row[0]} {third_row[1]} {third_row[2]}')
+                elif your_row[0] == your_row[1] and your_row[1] == your_row[2] and your_row[2] == your_row[0] and \
+                        your_row[
+                            0] != orange_gem and your_row[0] != purple_gem:
+                    amount_win += int(amount * 2)
+                    stater = f'Ставка: **{amount}** {emoji} Выигрыш **{amount_win}** {emoji}'
+                    embed.add_field(name=f'Бесплатная прокрутка {j+1} - {ctx.author}',
+                                    value=f'⠀{first_row[0]} {first_row[1]} {first_row[2]}\n'
+                                          f'⠀{your_row[0]} {your_row[1]} {your_row[2]}'
+                                          f'\n⠀{third_row[0]} {third_row[1]} {third_row[2]}')
+                elif your_row[0] == your_row[1] or your_row[1] == your_row[2] or your_row[0] == your_row[2]:
+                    amount_win += int(amount * 1)
+                    stater = f'Ставка: **{amount}** {emoji} Выигрыш **{amount_win}** {emoji}'
+                    embed.add_field(name=f'Бесплатная прокрутка {j+1} - {ctx.author}',
+                                    value=f'⠀{first_row[0]} {first_row[1]} {first_row[2]}\n'
+                                          f'⠀{your_row[0]} {your_row[1]} {your_row[2]}'
+                                          f'\n⠀{third_row[0]} {third_row[1]} {third_row[2]}')
+                else:
+                    pass
+
+                board = [your_row[0], your_row[1], your_row[2],
+                         first_row[0], first_row[1], first_row[2],
+                         third_row[0], third_row[1], third_row[2]]
+                times, gem = most_frequent(board)
+                if times >= 7:
+                    jackpot = True
+
+        if jackpot is False:
+            jackpot_amount = cursor.execute(f"SELECT amount FROM jackpot WHERE guild_id = {ctx.guild.id}").fetchone()[0]
+            jack_to_footer = jackpot_amount
+            if amount_win == 0:
+                sql = "UPDATE jackpot SET amount = ? WHERE guild_id = ?"
+                val = (jackpot_amount+amount, ctx.guild.id)
+                cursor.execute(sql, val)
+                db.commit()
+                jack_to_footer = jackpot_amount + amount
+        if jackpot is True:
+            embed.add_field(name="JACKPOT WIN", value=f'{ctx.author.name} забирает джекпот!')
+            jackpot_amount = cursor.execute(f"SELECT amount FROM jackpot WHERE guild_id = {ctx.guild.id}").fetchone()[0]
+            sql = "UPDATE jackpot SET amount = ? WHERE guild_id = ?"
+            val = (10000, ctx.guild.id)
             cursor.execute(sql, val)
             db.commit()
-            cursor.close()
-            db.close()
-            return await ctx.send(embed=embed)
-        embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at,
-                               description=stater)
-        embed.add_field(name=f'Слоты - {ctx.author}', value=f'⠀{first_row[0]} {first_row[1]} {first_row[2]}\n'
-                                                            f'⠀{your_row[0]} {your_row[1]} {your_row[2]}'
-                                                            f'\n⠀{third_row[0]} {third_row[1]} {third_row[2]}')
-        embed.set_footer(icon_url=ctx.author.avatar.url, text=f'Ваш баланс {int(balance - amount)}')
-        sql = "UPDATE money SET money = ? WHERE user_id = ?"
-        val = (balance - amount, ctx.author.id)
-        cursor.execute(sql, val)
-        db.commit()
+            amount_win += jackpot_amount
+            jack_to_footer = 10000
+
+        if amount_win == 0:
+            sql = "UPDATE money SET money = ? WHERE user_id = ?"
+            val = (balance - amount, ctx.author.id)
+            cursor.execute(sql, val)
+            db.commit()
+        else:
+            sql = "UPDATE money SET money = ? WHERE user_id = ?"
+            print(amount_win)
+            val = (balance + amount_win, ctx.author.id)
+            cursor.execute(sql, val)
+            db.commit()
+        stater = f'Ставка: **{amount}** {emoji} Выигрыш **{amount_win}** {emoji}'
+        embed.description = stater
+        embed.set_footer(icon_url=ctx.author.avatar.url, text=f'Ваш баланс {get_user_balance(ctx.author.id)}'
+                                                              f'\nРазмер Джекпота теперь составляет: {jack_to_footer}')
+        await ctx.send(embed=embed)
         cursor.close()
         db.close()
-        return await ctx.send(embed=embed)
 
     @__slots.error
     async def __slots_error(self, ctx, error):
@@ -712,7 +857,8 @@ class Economics(commands.Cog):
                 return await ctx.send(embed=embed)
             else:
                 cost = \
-                cursor.execute(f"SELECT cost FROM shop WHERE role_id = {roles[number_of_role - 1].id}").fetchone()[0]
+                    cursor.execute(f"SELECT cost FROM shop WHERE role_id = {roles[number_of_role - 1].id}").fetchone()[
+                        0]
                 await ctx.author.add_roles(roles[number_of_role - 1])
                 cursor.execute(f"SELECT money FROM money WHERE user_id = {ctx.author.id}")
                 balance = cursor.fetchone()
@@ -731,7 +877,6 @@ class Economics(commands.Cog):
                 embed.add_field(name='Магазин', value=f'Роль {roles[number_of_role - 1].mention} была куплена.')
                 embed.set_footer(text=f"остаточный баланс после операции: {balance - cost}", icon_url=ctx.guild.icon)
                 await ctx.send(embed=embed)
-
 
     @nextcord.slash_command(name='blackjack',
                             default_member_permissions=Permissions(send_messages=True))
