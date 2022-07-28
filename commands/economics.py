@@ -17,6 +17,10 @@ from core.money.getters import get_user_balance
 from core.ui.buttons import create_button, ViewAuthorCheck
 import asyncio
 from collections import Counter
+from io import BytesIO
+from PIL import Image, ImageDraw, ImageFont, ImageOps
+from config import settings
+from easy_pil import *
 
 
 def most_frequent(List: list):
@@ -148,37 +152,50 @@ class Economics(commands.Cog):
 
     @commands.command(aliases=['bal', 'бал', 'баланс', 'money', 'balance', '$', 'wallet', 'мани', 'b', 'б'])
     async def __balance(self, ctx, user: nextcord.Member = None):
-        emoji = "<a:emoji_1:995590858734841938>"
-        user = ctx.author if not user else user
+        emoji = "<a:1001250237328924684:1001441110654210068>"
+        async with ctx.channel.typing():
+            user = ctx.author if not user else user
 
-        if user.bot:
-            return await ctx.send('Нельзя указывать бота!!!')
+            if user.bot:
+                return await ctx.send('Нельзя указывать бота!!!')
 
-        db = sqlite3.connect("./databases/main.sqlite")
-        cursor = db.cursor()
+            db = sqlite3.connect("./databases/main.sqlite")
+            cursor = db.cursor()
 
-        if cursor.execute(f"SELECT user_id FROM money WHERE user_id = {user.id}").fetchone() is None:
-            sql = "INSERT INTO money(user_id, money) VALUES (?, ?)"
-            val = (user.id, 100)
-            cursor.execute(sql, val)
-            db.commit()
+            if cursor.execute(f"SELECT user_id FROM money WHERE user_id = {user.id}").fetchone() is None:
+                sql = "INSERT INTO money(user_id, money) VALUES (?, ?)"
+                val = (user.id, 100)
+                cursor.execute(sql, val)
+                db.commit()
 
-        cursor.execute(f"SELECT money FROM money WHERE user_id = {user.id}")
-        balance = cursor.fetchone()
-        try:
-            balance = balance[0]
-        except:
-            return await ctx.send('что-то с бд!!!')
+            cursor.execute(f"SELECT money FROM money WHERE user_id = {user.id}")
+            balance = cursor.fetchone()
+            try:
+                balance = balance[0]
+            except:
+                return await ctx.send('что-то с бд!!!')
 
-        embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at,
-                               description=f"У вас на счету __**{balance}**__ {emoji}")
-        embed.set_author(name=f"Баланс пользователя: {user.name}", icon_url=user.display_avatar)
-        embed.set_footer(text=random.choice(settings['footers']), icon_url=ctx.guild.icon)
+            background = Editor('./assets/card.png')
+            larger_font = Font('ARIALUNI.TTF', 45)
+            font = Font('ARIALUNI.TTF', 40)
+            avatar = BytesIO()
+            await user.display_avatar.with_format("png").save(avatar)
+            profile_picture = Image.open(avatar)
+            profile = Editor(profile_picture).resize((200, 200)).circle_image()
+            background.paste(profile, (760, 460))
+            background.text((140, 480), str(user), font=font, color="#FFFFFF")
+            background.text((140, 420), f'Баланс: {balance}', font=larger_font, color="#FFFFFF")
+            file = nextcord.File(fp=background.image_bytes, filename="card.png")
 
-        await ctx.send(embed=embed)
+            embed = nextcord.Embed(color=settings['defaultBotColor'], timestamp=ctx.message.created_at,
+                                   description=f"У вас на счету __**{balance}**__ {emoji}")
+            embed.set_author(name=f"Баланс пользователя: {user.name}", icon_url=user.display_avatar)
+            embed.set_footer(text=random.choice(settings['footers']), icon_url=ctx.guild.icon)
 
-        cursor.close()
-        db.close()
+            await ctx.send(file=file)
+
+            cursor.close()
+            db.close()
 
     @commands.command(aliases=['give', 'transfer', 'дать', 'на', 'moneysend', 'sendmoney', 'send'])
     async def __transfer(self, ctx, user: nextcord.Member = None, amount: int = 0):
