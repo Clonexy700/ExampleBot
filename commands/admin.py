@@ -35,6 +35,26 @@ class EmbedModal(nextcord.ui.Modal):
     async def callback(self, interaction: Interaction) -> None:
         title = self.embedTitle.value
         description = self.embedDescription.value
+        words_in_desc = description.split(' ')
+        already_was_emojis = []
+        for word in words_in_desc:
+            try:
+                if word[0] == ':':
+                    if word[-1] == ':':
+                        emoji_name = word[1:-1]
+                        if emoji_name not in already_was_emojis:
+                            emoji = (nextcord.utils.get(interaction.guild.emojis, name=emoji_name))
+                            description = description.replace(word, str(emoji))
+                            already_was_emojis.append(emoji_name)
+                        else:
+                            pass
+                if word[0] == '@':
+                    role_name = word[1:]
+                    role = nextcord.utils.get(interaction.guild.roles, name=role_name)
+                    description = description.replace(word, role.mention)
+
+            except IndexError:
+                pass
         embed = nextcord.Embed(title=title, description=description,
                                color=settings['defaultBotColor'])
         if self.embedURL.value is not None:

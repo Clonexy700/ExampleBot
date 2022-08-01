@@ -15,6 +15,8 @@ class LoopHandler(commands.Cog):
 
     @tasks.loop(seconds=60)
     async def task_loop(self):
+        pass
+        """
         guild = self.client.get_guild(settings['guild_id'])
         voice_members = set()
         for voice_channel in guild.voice_channels:
@@ -23,6 +25,7 @@ class LoopHandler(commands.Cog):
         channel = self.client.get_channel(settings['active_voice_member_count_channel'])
         voice_members_counter = len(voice_members)
         await channel.edit(name=f"PSYCHO: voice {voice_members_counter}")
+        """
 
 
 def setup(client):
